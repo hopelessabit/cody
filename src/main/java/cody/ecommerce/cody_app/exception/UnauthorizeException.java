@@ -5,14 +5,14 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import cody.ecommerce.cody_app.dto.Error;
 
 @ResponseStatus(value = HttpStatus.UNAUTHORIZED)
-public class UnAuthorizeException extends GlobalException{
+public class UnauthorizeException extends GlobalException{
 
     /**
      * Instantiates a new Resource not found exception.
      *
      * @param message the message
      */
-    public UnAuthorizeException(String message) {
+    public UnauthorizeException(String message) {
         super(message);
     }
 
@@ -22,12 +22,12 @@ public class UnAuthorizeException extends GlobalException{
      * @param message the message
      * @param error  the error
      */
-    public UnAuthorizeException(String message, Error<?> error) {
+    public UnauthorizeException(String message, Error<?> error) {
         super(message, error);
     }
 
-    public static UnAuthorizeException unAuthorize(){
-        return new UnAuthorizeException("Không có quyền thực hiện chức năng này.");
+    public static UnauthorizeException unAuthorize(){
+        return new UnauthorizeException("Không có quyền thực hiện chức năng này.");
     }
 }
 

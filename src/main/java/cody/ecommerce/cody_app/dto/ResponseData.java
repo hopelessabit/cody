@@ -82,4 +82,8 @@ public class ResponseData<T> {
     public static <T> ResponseData<T> ok(String message) {
         return new ResponseData<>(HttpStatus.OK.value(), message);
     }
+
+    public static <T> ResponseData<T> error(String message, Error<?> error) {
+        return new ResponseData<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), message, error);
+    }
 }

@@ -4,8 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 import cody.ecommerce.cody_app.dto.Error;
 
-@Getter
-@Setter
 public class GlobalException extends RuntimeException {
     private final Error<?> error;
 
@@ -28,5 +26,9 @@ public class GlobalException extends RuntimeException {
     public GlobalException(String message, Error<?> error) {
         super(message);
         this.error = error;
+    }
+
+    public Error<?> getError() {
+        return error;
     }
 }

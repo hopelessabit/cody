@@ -28,4 +28,8 @@ public class LoginResponseDTO {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
     }
+
+    public static LoginResponseDTO of(String accessToken, String refreshToken) {
+        return new LoginResponseDTO(accessToken, refreshToken);
+    }
 }

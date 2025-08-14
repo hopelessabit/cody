@@ -132,13 +132,24 @@ public class User implements UserDetails {
         this.createdAt = createdAt;
     }
 
-    public static User of(RegisterRequestDTO requestDTO) {
+    public static User initUser(RegisterRequestDTO requestDTO) {
         User user = new User();
         user.setId(IdUtil.generateId());
         user.setEmail(requestDTO.getEmail());
         user.setName(requestDTO.getLastName() + " " + requestDTO.getFirstName());
         user.setPassword(requestDTO.getPassword());
         user.setRole(Role.US); // Default role, can be changed based on your logic
+        user.setCreatedAt(LocalDateTime.now());
+        return user;
+    }
+
+    public static User init(RegisterRequestDTO requestDTO, Role role) {
+        User user = new User();
+        user.setId(IdUtil.generateId());
+        user.setEmail(requestDTO.getEmail());
+        user.setName(requestDTO.getLastName() + " " + requestDTO.getFirstName());
+        user.setPassword(requestDTO.getPassword());
+        user.setRole(role); // Default role, can be changed based on your logic
         user.setCreatedAt(LocalDateTime.now());
         return user;
     }

@@ -18,7 +18,12 @@ public class ResponseUtil {
     }
 
     public static <T> ResponseEntity<ResponseData<T>> getResponse(Supplier<T> responseSupplier, String message) {
-        T response = responseSupplier.get(); // Call the function
+        T response;
+        try {
+            response = responseSupplier.get(); // Call the function
+        } catch (GlobalException e) {
+            return new ResponseEntity<>(ResponseData.error("Lỗi không xác định", e.getError()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         return new ResponseEntity<>(ResponseData.ok(response, message), HttpStatus.OK);
     }
 

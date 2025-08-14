@@ -5,7 +5,8 @@ import lombok.Getter;
 public enum Role {
     US ("USER","Người dùng"),
     AD ("ADMIN","Admin"),
-    SL ("SALE","Quản lý");
+    EP ("EMPLOYEE","Quản lý"),
+    MN ("MANAGER","Quản lý");
 
     private final String fullName;
     private final String vietnamese;
@@ -31,7 +32,11 @@ public enum Role {
         return this == AD;
     }
 
-    public boolean isSale() {
-        return this == SL;
+    public boolean isEmployee() {
+        return this == EP;
+    }
+
+    public boolean isManager() {
+        return this == MN;
     }
 }

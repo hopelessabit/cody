@@ -79,4 +79,36 @@ public interface AuthenticationService {
      * @return the login response dto with null refresh token
      */
     LoginResponseDTO makeRefreshToken(RefreshTokenRequestDTO request);
+
+    /**
+     * Admin login login response dto.
+     *
+     * @param request the request
+     * @return the login response dto
+     */
+    LoginResponseDTO adminLogin(LoginRequestDTO request);
+
+    /**
+     * Register manager void.
+     *
+     * @param request the request
+     * @return the void
+     */
+    Void registerEmployee(RegisterRequestDTO request);
+
+    /**
+     * Register manager void.
+     *
+     * @param request the request
+     * @return the void
+     */
+    Void registerManager(RegisterRequestDTO request);
+
+    /**
+     * Employee login login response dto.
+     *
+     * @param request the request
+     * @return the login response dto
+     */
+    LoginResponseDTO employeeLogin(LoginRequestDTO request);
 }
