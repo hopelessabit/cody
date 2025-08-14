@@ -10,7 +10,6 @@ import cody.ecommerce.cody_app.repository.UserRepository;
 import cody.ecommerce.cody_app.service.AuthenticationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -35,6 +34,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         this.jwtService = jwtService;
     }
 
+    @Override
     public LoginResponseDTO loginAccount(LoginRequestDTO request) throws NotFoundException, InternalServerExceptionException {
         String accessToken;
         String refreshToken;
@@ -52,6 +52,21 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         return new LoginResponseDTO(accessToken, refreshToken);
+    }
+
+    public LoginResponseDTO makeRefreshToken(RefreshTokenRequestDTO request){
+        if (request == null || request.getRefreshToken() == null || request.getRefreshToken().isEmpty()) {
+            throw new BadRequestException("Yêu cầu làm mới token không hợp lệ");
+        }
+        String email = jwtService.extractUsername(request.getRefreshToken());
+        if (email == null) {
+            throw new NotFoundException("Người dùng không tồn tại");
+        }
+        User user = userRepository.findFirstByEmail(email)
+                .orElseThrow(() -> new NotFoundException("Người dùng không tồn tại"));
+        String accessToken = jwtService.generateToken(user);
+
+        return new LoginResponseDTO(accessToken, null);
     }
 
     @Override

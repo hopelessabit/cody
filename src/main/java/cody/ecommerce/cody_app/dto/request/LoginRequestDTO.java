@@ -3,12 +3,19 @@ package cody.ecommerce.cody_app.dto.request;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@NoArgsConstructor
-@AllArgsConstructor
 public class LoginRequestDTO {
     private String email;
     private String password;
+
+    public LoginRequestDTO() {
+    }
+
+    public LoginRequestDTO(String email, String password) {
+        this.email = email;
+        this.password = password;
+    }
 
     public String getEmail() {
         return email;

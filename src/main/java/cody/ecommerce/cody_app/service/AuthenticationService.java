@@ -71,4 +71,12 @@ public interface AuthenticationService {
      * @return the login response dto
      */
     Void registerAccount(RegisterRequestDTO request);
+
+    /**
+     * Make refresh token login response dto.
+     *
+     * @param request the request
+     * @return the login response dto with null refresh token
+     */
+    LoginResponseDTO makeRefreshToken(RefreshTokenRequestDTO request);
 }

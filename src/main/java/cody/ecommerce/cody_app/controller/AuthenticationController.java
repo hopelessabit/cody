@@ -1,12 +1,12 @@
 package cody.ecommerce.cody_app.controller;
 
 import cody.ecommerce.cody_app.dto.ResponseData;
+import cody.ecommerce.cody_app.dto.request.RefreshTokenRequestDTO;
 import cody.ecommerce.cody_app.dto.request.RegisterRequestDTO;
 import cody.ecommerce.cody_app.util.ResponseUtil;
 import cody.ecommerce.cody_app.dto.request.LoginRequestDTO;
 import cody.ecommerce.cody_app.dto.response.LoginResponseDTO;
 import cody.ecommerce.cody_app.service.AuthenticationService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,5 +31,10 @@ public class AuthenticationController {
     @PostMapping("/register")
     public ResponseEntity<ResponseData<Void>> register(@RequestBody @Validated RegisterRequestDTO request) {
         return ResponseUtil.getResponse(() -> authenticationService.registerAccount(request), "GOOD");
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<ResponseData<LoginResponseDTO>> refreshToken(@RequestBody @Validated RefreshTokenRequestDTO request) {
+        return ResponseUtil.getResponse(() -> authenticationService.makeRefreshToken(request), "GOOD");
     }
 }
