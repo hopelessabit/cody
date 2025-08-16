@@ -2,8 +2,8 @@ package cody.ecommerce.cody_app.entity.relation_entity;
 
 import cody.ecommerce.cody_app.entity.Category;
 import cody.ecommerce.cody_app.entity.Product;
-import jakarta.persistence.*;
 import cody.ecommerce.cody_app.entity.sub_entity_id.ProductCategoryId;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "product_categories")

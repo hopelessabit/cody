@@ -1,8 +1,14 @@
 package cody.ecommerce.cody_app.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.Nationalized;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "ingredients")
 public class Ingredient extends BaseEntity {
@@ -16,13 +22,5 @@ public class Ingredient extends BaseEntity {
 
     public Ingredient(String id) {
         super(id);
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 }
