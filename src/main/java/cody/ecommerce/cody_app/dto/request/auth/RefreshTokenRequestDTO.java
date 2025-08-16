@@ -1,4 +1,4 @@
-package cody.ecommerce.cody_app.dto.request;
+package cody.ecommerce.cody_app.dto.request.auth;
 
 public class RefreshTokenRequestDTO {
     private String refreshToken;

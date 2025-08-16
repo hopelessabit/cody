@@ -1,8 +1,7 @@
 package cody.ecommerce.cody_app.entity;
 
 import cody.ecommerce.cody_app.constant.Role;
-import cody.ecommerce.cody_app.dto.request.RegisterRequestDTO;
-import cody.ecommerce.cody_app.util.IdUtil;
+import cody.ecommerce.cody_app.dto.request.auth.RegisterRequestDTO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import org.hibernate.annotations.Nationalized;
@@ -15,11 +14,7 @@ import java.util.Collection;
 import java.util.List;
 
 @Entity(name = "users")
-public class User implements UserDetails {
-    @Id
-    @Column(name = "id", length = 50, nullable = false)
-    private String id;
-
+public class User extends BaseEntity implements UserDetails {
     @Nationalized
     @Column(name = "email", length = 255)
     private String email;
@@ -82,18 +77,11 @@ public class User implements UserDetails {
     }
 
     public User() {
+        super();
     }
 
     public User(String id) {
-        this.id = id;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
+        super(id);
     }
 
     public String getEmail() {
@@ -134,7 +122,6 @@ public class User implements UserDetails {
 
     public static User initUser(RegisterRequestDTO requestDTO) {
         User user = new User();
-        user.setId(IdUtil.generateId());
         user.setEmail(requestDTO.getEmail());
         user.setName(requestDTO.getLastName() + " " + requestDTO.getFirstName());
         user.setPassword(requestDTO.getPassword());
@@ -145,7 +132,6 @@ public class User implements UserDetails {
 
     public static User init(RegisterRequestDTO requestDTO, Role role) {
         User user = new User();
-        user.setId(IdUtil.generateId());
         user.setEmail(requestDTO.getEmail());
         user.setName(requestDTO.getLastName() + " " + requestDTO.getFirstName());
         user.setPassword(requestDTO.getPassword());

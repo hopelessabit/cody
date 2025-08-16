@@ -1,8 +1,6 @@
-package cody.ecommerce.cody_app.dto.request;
+package cody.ecommerce.cody_app.dto.request.auth;
 
 import cody.ecommerce.cody_app.dto.Error;
-import lombok.Getter;
-import lombok.NonNull;
 
 import java.util.HashMap;
 import java.util.Map;

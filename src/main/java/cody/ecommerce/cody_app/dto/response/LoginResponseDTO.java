@@ -1,7 +1,6 @@
 package cody.ecommerce.cody_app.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.Data;
 
 public class LoginResponseDTO {
     private String accessToken;

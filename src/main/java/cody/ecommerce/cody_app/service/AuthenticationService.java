@@ -1,7 +1,7 @@
 package cody.ecommerce.cody_app.service;
 
 import cody.ecommerce.cody_app.dto.ResponseData;
-import cody.ecommerce.cody_app.dto.request.*;
+import cody.ecommerce.cody_app.dto.request.auth.*;
 import cody.ecommerce.cody_app.dto.response.LoginResponseDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

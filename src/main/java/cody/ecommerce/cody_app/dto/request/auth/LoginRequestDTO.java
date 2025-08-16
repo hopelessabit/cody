@@ -1,9 +1,4 @@
-package cody.ecommerce.cody_app.dto.request;
-
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+package cody.ecommerce.cody_app.dto.request.auth;
 
 public class LoginRequestDTO {
     private String email;

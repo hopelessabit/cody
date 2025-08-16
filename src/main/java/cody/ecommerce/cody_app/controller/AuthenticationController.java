@@ -1,10 +1,10 @@
 package cody.ecommerce.cody_app.controller;
 
 import cody.ecommerce.cody_app.dto.ResponseData;
-import cody.ecommerce.cody_app.dto.request.RefreshTokenRequestDTO;
-import cody.ecommerce.cody_app.dto.request.RegisterRequestDTO;
+import cody.ecommerce.cody_app.dto.request.auth.RefreshTokenRequestDTO;
+import cody.ecommerce.cody_app.dto.request.auth.RegisterRequestDTO;
 import cody.ecommerce.cody_app.util.ResponseUtil;
-import cody.ecommerce.cody_app.dto.request.LoginRequestDTO;
+import cody.ecommerce.cody_app.dto.request.auth.LoginRequestDTO;
 import cody.ecommerce.cody_app.dto.response.LoginResponseDTO;
 import cody.ecommerce.cody_app.service.AuthenticationService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
