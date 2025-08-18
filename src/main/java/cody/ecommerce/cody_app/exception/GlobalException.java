@@ -31,4 +31,12 @@ public class GlobalException extends RuntimeException {
     public Error<?> getError() {
         return error;
     }
+
+    public static GlobalException error(String message, Error<?> error) {
+        return new GlobalException(message, error);
+    }
+
+    public static GlobalException error(Error<?> error) {
+        return new GlobalException(error.getDetail(), error);
+    }
 }

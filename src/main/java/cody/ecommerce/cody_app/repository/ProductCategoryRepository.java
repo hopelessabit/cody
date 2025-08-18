@@ -11,4 +11,6 @@ import java.util.Collection;
 public interface ProductCategoryRepository extends JpaRepository<ProductCategory, ProductCategoryId> {
     // Custom query methods if needed
     long deleteById_ProductIdAndId_CategoryIdIn(String productId, Collection<String> categoryIds);
+
+    long deleteById_CategoryId(String categoryId);
 }

@@ -37,7 +37,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public LoginResponseDTO loginAccount(LoginRequestDTO request) throws NotFoundException, InternalServerExceptionException {
+    public LoginResponseDTO loginAccount(LoginRequestDTO request) throws NotFoundException, InternalServerErrorException {
         String accessToken;
         String refreshToken;
         try {
@@ -50,7 +50,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         } catch (NotFoundException ex) {
             throw new NotFoundException(AuthenticationMessage.FAILED, Error.build(ex.getMessage()));
         } catch (Exception ex) {
-            throw new InternalServerExceptionException(AuthenticationMessage.FAILED, Error.build(ex.getMessage()));
+            throw new InternalServerErrorException(AuthenticationMessage.FAILED, Error.build(ex.getMessage()));
         }
 
         return new LoginResponseDTO(accessToken, refreshToken);
@@ -126,7 +126,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         try {
             var account = userRepository.findFirstByEmail(request.getEmail())
                     .orElseThrow(() -> new NotFoundException("Người dùng không tồn tại"));
-            if (!account.getRole().isAdmin()) {
+            if (!account.getRole().isAdmin() && !account.getRole().isManager()) {
                 throw new BadRequestException("Người dùng không có quyền truy cập");
             }
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword(), List.of(new SimpleGrantedAuthority(account.getRole().getFullName()))));
@@ -136,7 +136,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         } catch (NotFoundException ex) {
             throw new NotFoundException(AuthenticationMessage.FAILED, Error.build(ex.getMessage()));
         } catch (Exception ex) {
-            throw new InternalServerExceptionException(AuthenticationMessage.FAILED, Error.build(ex.getMessage()));
+            throw new InternalServerErrorException(AuthenticationMessage.FAILED, Error.build(ex.getMessage()));
         }
         return LoginResponseDTO.of(accessToken, refreshToken);
     }
@@ -178,7 +178,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         try {
             var account = userRepository.findFirstByEmail(request.getEmail())
                     .orElseThrow(() -> new NotFoundException("Người dùng không tồn tại"));
-            if (!account.getRole().isEmployee() || !account.getRole().isManager()) {
+            if (!account.getRole().isEmployee()) {
                 throw new BadRequestException("Người dùng không có quyền truy cập");
             }
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword(), List.of(new SimpleGrantedAuthority(account.getRole().getFullName()))));
@@ -188,7 +188,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         } catch (NotFoundException ex) {
             throw new NotFoundException(AuthenticationMessage.FAILED, Error.build(ex.getMessage()));
         } catch (Exception ex) {
-            throw new InternalServerExceptionException(AuthenticationMessage.FAILED, Error.build(ex.getMessage()));
+            throw new InternalServerErrorException(AuthenticationMessage.FAILED, Error.build(ex.getMessage()));
         }
         return LoginResponseDTO.of(accessToken, refreshToken);
     }

@@ -15,7 +15,9 @@ import java.time.LocalDateTime;
 public class CategoryDTO {
     private String id;
     private String name;
+    private String slug;
     private String description;
+    private String metaDescription;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -23,7 +25,9 @@ public class CategoryDTO {
         CategoryDTO dto = new CategoryDTO();
         dto.setId(category.getId());
         dto.setName(category.getName());
+        dto.setSlug(category.getSlug());
         dto.setDescription(category.getDescription());
+        dto.setMetaDescription(category.getMetaDescription());
         dto.setCreatedAt(category.getCreatedAt());
         dto.setUpdatedAt(category.getUpdatedAt());
         return dto;
@@ -33,6 +37,7 @@ public class CategoryDTO {
         CategoryDTO dto = new CategoryDTO();
         dto.setId(category.getId());
         dto.setName(category.getName());
+        dto.setSlug(category.getSlug());
         return dto;
     }
 }
