@@ -25,6 +25,7 @@ public class CreateProductRequest {
     private Integer  stockQuantity;
     private Set<String> categoryIds;
     private Set<CreateProductImageDTO> images;
+    private Boolean isHidden = true;
 
     public Error<String> validate() {
         Map<String, String> errors = new HashMap<>();

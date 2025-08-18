@@ -27,7 +27,7 @@ public class Product extends BaseEntity{
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String description;
 
-    @Column(length = 255)
+    @Column(name = "slug", length = 255)
     private String slug;
 
     @Nationalized
@@ -46,6 +46,9 @@ public class Product extends BaseEntity{
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "is_hidden", nullable = false, columnDefinition = "BIT DEFAULT 0")
+    private Boolean isHidden = true;
 
     @UpdateTimestamp
     @Column(name = "updated_at")
@@ -83,5 +86,6 @@ public class Product extends BaseEntity{
         this.setPrice(request.getPrice());
         this.setOriginalPrice(request.getOriginalPrice());
         this.setStockQuantity(request.getStockQuantity());
+        this.setIsHidden(request.getIsHidden() == null || request.getIsHidden());
     }
 }

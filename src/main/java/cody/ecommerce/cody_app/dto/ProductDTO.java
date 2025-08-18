@@ -1,4 +1,3 @@
-// src/main/java/cody/ecommerce/cody_app/dto/ProductDTO.java
 package cody.ecommerce.cody_app.dto;
 
 import cody.ecommerce.cody_app.entity.Product;
@@ -8,10 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -26,6 +22,7 @@ public class ProductDTO {
     private BigDecimal price;
     private BigDecimal originalPrice;
     private Integer stockQuantity;
+    private Boolean isHidden;
     private List<CategoryDTO> categories;
     private List<ProductImageDTO> images;
 
@@ -39,6 +36,7 @@ public class ProductDTO {
         productDTO.setPrice(product.getPrice());
         productDTO.setOriginalPrice(product.getOriginalPrice());
         productDTO.setStockQuantity(product.getStockQuantity());
+        productDTO.setIsHidden(product.getIsHidden());
         if (product.getCategories() != null) {
             productDTO.setCategories(
                     product.getCategories().stream()

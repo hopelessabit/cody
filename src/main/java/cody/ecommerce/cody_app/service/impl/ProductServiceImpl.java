@@ -3,8 +3,6 @@ package cody.ecommerce.cody_app.service.impl;
 import cody.ecommerce.cody_app.constant.Action;
 import cody.ecommerce.cody_app.dto.Error;
 import cody.ecommerce.cody_app.dto.ProductDTO;
-import cody.ecommerce.cody_app.dto.CategoryDTO;
-import cody.ecommerce.cody_app.dto.ProductImageDTO;
 import cody.ecommerce.cody_app.dto.request.product.CreateProductRequest;
 import cody.ecommerce.cody_app.dto.request.product.UpdateProductCategoryRequest;
 import cody.ecommerce.cody_app.dto.request.product.UpdateProductImageRequest;
@@ -23,8 +21,17 @@ import cody.ecommerce.cody_app.repository.ProductRepository;
 import cody.ecommerce.cody_app.service.CategoryService;
 import cody.ecommerce.cody_app.service.ProductService;
 import cody.ecommerce.cody_app.util.CompareUtil;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -40,22 +47,20 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDTO getById(String id) {
-        Product product = productRepository.findById(id).orElse(null);
-
-        if (product == null) throw new NotFoundException("Product not found", Error.build("id", List.of(id)));
+        Product product = productRepository.findByIdAndIsHidden(id, false).orElseThrow(() -> new NotFoundException("Sản phẩm không tồn tại.", Error.build("id", List.of(id))));
 
         return ProductDTO.basicDetail(product);
     }
 
+    //TODO: Filter by is hidden
     @Override
     public List<ProductDTO> getAll() {
         return productRepository.findAll().stream()
-                .map(product -> {
-                    return ProductDTO.basicList(product);
-                })
+                .map(ProductDTO::basicList)
                 .toList();
     }
 
+    //TODO: Filter by is hidden
     @Override
     public List<ProductDTO> getBasicList() {
         return productRepository.findAll().stream()
@@ -124,6 +129,7 @@ public class ProductServiceImpl implements ProductService {
         product.setPrice(CompareUtil.compare(request.getPrice(), product.getPrice()));
         product.setOriginalPrice(CompareUtil.compare(request.getOriginalPrice(), product.getOriginalPrice()));
         product.setStockQuantity(CompareUtil.compare(request.getStockQuantity(), product.getStockQuantity()));
+        product.setIsHidden(CompareUtil.compare(request.getIsHidden(), product.getIsHidden()));
 
         // Update categories and images if needed (requires additional logic)
         Product updated = productRepository.save(product);
@@ -288,16 +294,84 @@ public class ProductServiceImpl implements ProductService {
         }
 
         // Persist changes
-        if (!imagesToSave.isEmpty()) {
-            productImageRepository.saveAll(imagesToSave);
+        if (imagesToSave.isEmpty()) {
+            return;
         }
+        productImageRepository.saveAll(imagesToSave);
     }
 
     @Override
     public Void delete(String id) {
-        productRepository.findById(id)
+        Product product = productRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Sản phẩm không tồn tại.", Error.build("id", List.of(id))));
-        productRepository.deleteById(id);
+        product.setIsHidden(true);
+        productRepository.save(product);
         return null;
+    }
+
+    @Override
+    public ProductDTO getBySlug(String slug) {
+        Product product = productRepository.findBySlugAndIsHidden(slug, false)
+                .orElseThrow(() -> new NotFoundException("Product not found", Error.build("slug", List.of(slug))));
+        return ProductDTO.basicDetail(product);
+    }
+
+    @Override
+    public Page<ProductDTO> searchProducts(String keyword, String categoryId, int page, int size,
+                                           String sortBy, String sortDirection, boolean forStaff) {
+        // Validate and set defaults
+        if (page < 0) page = 0;
+        if (size <= 0 || size > 100) size = 10;
+        if (sortBy == null || sortBy.trim().isEmpty()) sortBy = "name";
+        if (sortDirection == null || sortDirection.trim().isEmpty()) sortDirection = "ASC";
+
+        // Create sort and pageable
+        Sort.Direction direction = "DESC".equalsIgnoreCase(sortDirection) ?
+                Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort sort = Sort.by(direction, sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        // Use Specification for dynamic query building
+        Specification<Product> spec = createProductSpecification(keyword, categoryId, forStaff);
+        Page<Product> productPage = productRepository.findAll(spec, pageable);
+
+        return productPage.map(ProductDTO::basicList);
+    }
+
+    private Specification<Product> createProductSpecification(String keyword, String categoryId, boolean forStaff) {
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            addKeywordPredicate(keyword, cb, root, predicates);
+            addCategoryIdPredicate(categoryId, cb, root, predicates, query);
+            if (forStaff)
+                addIsHiddenPredicate(cb, root, predicates);
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    private void addKeywordPredicate(String keyword, CriteriaBuilder cb, Root<Product> root, List<Predicate> predicates) {
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            String searchTerm = "%" + keyword.toLowerCase() + "%";
+            predicates.add(
+                    cb.or(
+                            cb.like(cb.lower(root.get("name")), searchTerm),
+                            cb.like(cb.lower(root.get("description")), searchTerm),
+                            cb.like(cb.lower(root.get("metaDescription")), searchTerm)
+                    )
+            );
+        }
+    }
+
+    private void addCategoryIdPredicate(String categoryId, CriteriaBuilder cb, Root<Product> root,
+                                        List<Predicate> predicates, CriteriaQuery<?> query) {
+        if (categoryId != null && !categoryId.trim().isEmpty()) {
+            query.distinct(true);
+            predicates.add(cb.equal(root.join("categories").get("id"), categoryId));
+        }
+    }
+
+    private void addIsHiddenPredicate(CriteriaBuilder cb, Root<Product> root, List<Predicate> predicates) {
+        predicates.add(cb.isFalse(root.get("isHidden")));
     }
 }
