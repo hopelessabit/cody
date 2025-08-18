@@ -4,18 +4,16 @@ import cody.ecommerce.cody_app.entity.Category;
 import cody.ecommerce.cody_app.entity.Product;
 import cody.ecommerce.cody_app.entity.sub_entity_id.ProductCategoryId;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "product_categories")
-@IdClass(ProductCategoryId.class)
 public class ProductCategory {
-    @Id
-    @Column(name = "product_id", length = 50)
-    private String productId;
-
-    @Id
-    @Column(name = "category_id", length = 50)
-    private String categoryId;
+    @EmbeddedId
+    private ProductCategoryId id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", referencedColumnName = "id", insertable = false, updatable = false)
@@ -28,24 +26,10 @@ public class ProductCategory {
     public ProductCategory() {}
 
     public ProductCategory(String productId, String categoryId) {
-        this.productId = productId;
-        this.categoryId = categoryId;
+        this.id = new ProductCategoryId(productId, categoryId);
     }
 
-    public String getProductId() {
-        return productId;
+    public static ProductCategory of(String productId, String categoryId) {
+        return new ProductCategory(productId, categoryId);
     }
-
-    public void setProductId(String productId) {
-        this.productId = productId;
-    }
-
-    public String getCategoryId() {
-        return categoryId;
-    }
-
-    public void setCategoryId(String categoryId) {
-        this.categoryId = categoryId;
-    }
-
 }

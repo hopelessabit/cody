@@ -7,8 +7,8 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -23,10 +23,10 @@ public class CreateProductRequest {
     private BigDecimal price;
     private BigDecimal originalPrice;
     private Integer  stockQuantity;
-    private List<String> categoryId;
-    private List<String> imageUrl;
+    private Set<String> categoryIds;
+    private Set<CreateProductImageDTO> images;
 
-    public Error<?> validate() {
+    public Error<String> validate() {
         Map<String, String> errors = new HashMap<>();
 
         if (name == null || name.trim().isEmpty()) {
@@ -47,6 +47,22 @@ public class CreateProductRequest {
             errors.put("stockQuantity", "Stock quantity is required");
         } else if (stockQuantity < 0) {
             errors.put("stockQuantity", "Stock quantity must be zero or positive");
+        }
+
+        boolean imageHasOneMain = false;
+        for (CreateProductImageDTO createProductImageDTO : images) {
+            if (createProductImageDTO.getImageUrl() == null || createProductImageDTO.getImageUrl().trim().isEmpty()) {
+                if (!errors.containsKey("image_id"))
+                    continue;
+                errors.put("imageUrl", "Image URL is required");
+            }
+            if (createProductImageDTO.getIsMain() != null && createProductImageDTO.getIsMain()) {
+                if (imageHasOneMain) {
+                    errors.put("images", "Only one image can be marked as main");
+                } else {
+                    imageHasOneMain = true;
+                }
+            }
         }
 
         if (errors.isEmpty()) {

@@ -1,7 +1,9 @@
 package cody.ecommerce.cody_app.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
+import cody.ecommerce.cody_app.dto.request.product.CreateProductRequest;
+import cody.ecommerce.cody_app.entity.sub_entity.ProductImage;
+import cody.ecommerce.cody_app.entity.sub_entity.ProductIncluded;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
@@ -10,6 +12,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -46,4 +50,38 @@ public class Product extends BaseEntity{
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    // One-to-many: Product -> ProductImage
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    private List<ProductImage> images;
+
+    // Many-to-many: Product -> Category via ProductCategory
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "product_categories",
+            joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+    private Set<Category> categories;
+
+    // Self-referencing many-to-many: Product -> ProductIncluded
+    @OneToMany(mappedBy = "productId", fetch = FetchType.LAZY)
+    private List<ProductIncluded> includedProducts;
+
+    @OneToMany(mappedBy = "includedProductId", fetch = FetchType.LAZY)
+    private List<ProductIncluded> includedInProducts;
+
+    public Product() {
+        super();
+    }
+
+    public void set(CreateProductRequest request) {
+        this.setName(request.getName());
+        this.setDescription(request.getDescription());
+        this.setSlug(request.getSlug());
+        this.setMetaDescription(request.getMetaDescription());
+        this.setPrice(request.getPrice());
+        this.setOriginalPrice(request.getOriginalPrice());
+        this.setStockQuantity(request.getStockQuantity());
+    }
 }

@@ -3,8 +3,12 @@ package cody.ecommerce.cody_app.entity.sub_entity;
 import cody.ecommerce.cody_app.entity.BaseEntity;
 import cody.ecommerce.cody_app.entity.Product;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.Nationalized;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "product_images")
 public class ProductImage extends BaseEntity {
@@ -28,29 +32,5 @@ public class ProductImage extends BaseEntity {
 
     public ProductImage(String id) {
         super(id);
-    }
-
-    public String getProductId() {
-        return productId;
-    }
-
-    public void setProductId(String productId) {
-        this.productId = productId;
-    }
-
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
-    public Boolean getIsMain() {
-        return isMain;
-    }
-
-    public void setIsMain(Boolean isMain) {
-        this.isMain = isMain;
     }
 }

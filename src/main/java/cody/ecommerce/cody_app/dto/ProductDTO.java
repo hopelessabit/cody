@@ -1,16 +1,22 @@
+// src/main/java/cody/ecommerce/cody_app/dto/ProductDTO.java
 package cody.ecommerce.cody_app.dto;
 
 import cody.ecommerce.cody_app.entity.Product;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProductDTO {
     private String id;
     private String name;
@@ -20,8 +26,8 @@ public class ProductDTO {
     private BigDecimal price;
     private BigDecimal originalPrice;
     private Integer stockQuantity;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private List<CategoryDTO> categories;
+    private List<ProductImageDTO> images;
 
     public static ProductDTO from(Product product) {
         ProductDTO productDTO = new ProductDTO();
@@ -33,8 +39,80 @@ public class ProductDTO {
         productDTO.setPrice(product.getPrice());
         productDTO.setOriginalPrice(product.getOriginalPrice());
         productDTO.setStockQuantity(product.getStockQuantity());
-        productDTO.setCreatedAt(product.getCreatedAt());
-        productDTO.setUpdatedAt(product.getUpdatedAt());
+        if (product.getCategories() != null) {
+            productDTO.setCategories(
+                    product.getCategories().stream()
+                            .map(CategoryDTO::basicFrom)
+                            .toList()
+            );
+        }
+        if (product.getImages() != null) {
+            productDTO.setImages(
+                    product.getImages().stream()
+                            .map(ProductImageDTO::basicFrom)
+                            .toList()
+            );
+        }
         return productDTO;
     }
+
+    public static ProductDTO basicFrom(Product product) {
+        ProductDTO productDTO = new ProductDTO();
+        productDTO.setId(product.getId());
+        productDTO.setName(product.getName());
+        productDTO.setSlug(product.getSlug());
+        return productDTO;
+    }
+
+    public static ProductDTO basicList(Product product) {
+        ProductDTO dto = new ProductDTO();
+        dto.setId(product.getId());
+        dto.setName(product.getName());
+        dto.setMetaDescription(product.getMetaDescription());
+        dto.setSlug(product.getSlug());
+        // Map categories to basic DTOs
+        if (product.getCategories() != null) {
+            dto.setCategories(
+                    product.getCategories().stream()
+                            .map(CategoryDTO::basicFrom)
+                            .toList()
+            );
+        }
+        // Map images to basic DTOs
+        if (product.getImages() != null) {
+            dto.setImages(
+                    product.getImages().stream()
+                            .map(ProductImageDTO::basicFrom)
+                            .toList()
+            );
+        }
+        return dto;
+    }
+
+    public static ProductDTO basicDetail(Product product) {
+        ProductDTO dto = new ProductDTO();
+        dto.setId(product.getId());
+        dto.setName(product.getName());
+        dto.setDescription(product.getDescription());
+        dto.setMetaDescription(product.getMetaDescription());
+        dto.setSlug(product.getSlug());
+        // Map categories to basic DTOs
+        if (product.getCategories() != null) {
+            dto.setCategories(
+                    product.getCategories().stream()
+                            .map(CategoryDTO::basicFrom)
+                            .toList()
+            );
+        }
+        // Map images to basic DTOs
+        if (product.getImages() != null) {
+            dto.setImages(
+                    product.getImages().stream()
+                            .map(ProductImageDTO::basicFrom)
+                            .toList()
+            );
+        }
+        return dto;
+    }
+
 }

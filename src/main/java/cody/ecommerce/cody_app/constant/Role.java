@@ -2,26 +2,19 @@ package cody.ecommerce.cody_app.constant;
 
 import lombok.Getter;
 
-public enum Role {
+@Getter
+public enum Role implements IEnumerate{
     US ("USER","Người dùng"),
     AD ("ADMIN","Admin"),
     EP ("EMPLOYEE","Quản lý"),
     MN ("MANAGER","Quản lý");
 
-    private final String fullName;
-    private final String vietnamese;
+    final String fullName;
+    final String vietnamese;
 
     Role(String fullName, String vietnamese){
         this.fullName = fullName;
         this.vietnamese = vietnamese;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public String getVietnamese() {
-        return vietnamese;
     }
 
     public boolean isUser() {
