@@ -2,11 +2,8 @@ package cody.ecommerce.cody_app.config;
 
 import cody.ecommerce.cody_app.config.response_handler.CustomAccessDeniedHandler;
 import cody.ecommerce.cody_app.config.response_handler.CustomAuthenticationEntryPoint;
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -50,6 +47,10 @@ public class SecurityConfig {
 
     private final String AUTHEN_URL = BASE_URL_V1 + "/auth/**";
     private final String ACCOUNT_API = BASE_URL_V1 + "/account/**";
+    private final String PRODUCT_ADMIN_API = BASE_URL_V1 + "/product/admin/**";
+    private final String PRODUCT_API = BASE_URL_V1 + "/product/**";
+    private final String CATEGORY_ADMIN_API = BASE_URL_V1 + "/category/admin/**";
+    private final String CATEGORY_API = BASE_URL_V1 + "/category/**";
     private final String TEST_API = BASE_URL_V1 + "/test/**";
     /**
      * Security filter chain security filter chain.
@@ -66,9 +67,16 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         req -> req
                                 .requestMatchers(
+                                        PRODUCT_ADMIN_API,
+                                        CATEGORY_ADMIN_API
+                                )
+                                .hasAnyAuthority("ADMIN", "MODERATOR")
+                                .requestMatchers(
                                         AUTHEN_URL,
                                         ACCOUNT_API,
                                         TEST_API,
+                                        PRODUCT_API,
+                                        CATEGORY_API,
                                         "/v2/api-docs",
                                         "/api/v1/auth/**",
                                         "/v3/api-docs",

@@ -8,7 +8,7 @@ import jakarta.persistence.MappedSuperclass;
 @MappedSuperclass
 public class BaseEntity {
     @Id
-    @Column(name = "id", length = 50, nullable = false)
+    @Column(name = "id", length = 50, nullable = false, unique = true)
     private String id;
 
     public BaseEntity(String id) {

@@ -2,7 +2,6 @@ package cody.ecommerce.cody_app.util;
 
 import cody.ecommerce.cody_app.dto.Error;
 import cody.ecommerce.cody_app.exception.*;
-import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +20,20 @@ public class ResponseUtil {
         T response;
         try {
             response = responseSupplier.get(); // Call the function
+        } catch (NotFoundException e) {
+            return new ResponseEntity<>(ResponseData.error("Không tìm thấy", e.getError()), HttpStatus.NOT_FOUND);
+        } catch (BadRequestException e) {
+            return new ResponseEntity<>(ResponseData.error("Yêu cầu không hợp lệ", e.getError()), HttpStatus.BAD_REQUEST);
+        } catch (DataExistedException e) {
+            return new ResponseEntity<>(ResponseData.error("Dữ liệu đã tồn tại", e.getError()), HttpStatus.UNAUTHORIZED);
+        } catch (UnauthorizeException e) {
+            return new ResponseEntity<>(ResponseData.error("", e.getError()), HttpStatus.FORBIDDEN);
+        } catch (InternalServerErrorException e) {
+            return new ResponseEntity<>(ResponseData.error("Lỗi máy chủ nội bộ", e.getError()), HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (GlobalException e) {
             return new ResponseEntity<>(ResponseData.error("Lỗi không xác định", e.getError()), HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (Exception e){
+            return new ResponseEntity<>(ResponseData.error("Lỗi không xác định", Error.build(e.getMessage())), HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return new ResponseEntity<>(ResponseData.ok(response, message), HttpStatus.OK);
     }
