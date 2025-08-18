@@ -144,6 +144,7 @@ CREATE TABLE products (
     price DECIMAL(18,2),
     original_price DECIMAL(18,2),
     stock_quantity INT,
+    is_hidden BIT DEFAULT 1,
     created_at DATETIME,
     updated_at DATETIME
 );
@@ -182,6 +183,8 @@ CREATE TABLE carts (
 CREATE TABLE categories (
     id VARCHAR(50) PRIMARY KEY,
     name NVARCHAR(100),
+    slug VARCHAR(100),
+    meta_description NVARCHAR(500),
     description NVARCHAR(MAX),
     created_at DATETIME,
     updated_at DATETIME
