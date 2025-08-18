@@ -51,7 +51,7 @@ public class CategoryController {
         return ResponseUtil.getResponse(() -> categoryService.update(categoryId, request), "Category updated successfully");
     }
 
-    @DeleteMapping("/admin/delete/{categoryId}")
+    @DeleteMapping("/admin/{categoryId}")
     public ResponseEntity<ResponseData<Void>> deleteCategory(@PathVariable String categoryId) {
         return ResponseUtil.getResponse(() -> categoryService.delete(categoryId), "Category deleted successfully");
     }
