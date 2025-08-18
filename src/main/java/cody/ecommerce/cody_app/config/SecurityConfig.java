@@ -47,10 +47,10 @@ public class SecurityConfig {
 
     private final String AUTHEN_URL = BASE_URL_V1 + "/auth/**";
     private final String ACCOUNT_API = BASE_URL_V1 + "/account/**";
-    private final String PRODUCT_ADMIN_API = BASE_URL_V1 + "/product/admin/**";
-    private final String PRODUCT_API = BASE_URL_V1 + "/product/**";
-    private final String CATEGORY_ADMIN_API = BASE_URL_V1 + "/category/admin/**";
-    private final String CATEGORY_API = BASE_URL_V1 + "/category/**";
+    private final String PRODUCT_ADMIN_API = BASE_URL_V1 + "/products/admin/**";
+    private final String PRODUCT_API = BASE_URL_V1 + "/products/**";
+    private final String CATEGORY_ADMIN_API = BASE_URL_V1 + "/categories/admin/**";
+    private final String CATEGORY_API = BASE_URL_V1 + "/categories/**";
     private final String TEST_API = BASE_URL_V1 + "/test/**";
     /**
      * Security filter chain security filter chain.

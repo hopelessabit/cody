@@ -5,10 +5,14 @@ import cody.ecommerce.cody_app.dto.Error;
 import cody.ecommerce.cody_app.dto.request.category.CreateCategoryRequest;
 import cody.ecommerce.cody_app.dto.request.category.UpdateCategoryRequest;
 import cody.ecommerce.cody_app.entity.Category;
+import cody.ecommerce.cody_app.entity.Product;
+import cody.ecommerce.cody_app.entity.relation_entity.ProductCategory;
+import cody.ecommerce.cody_app.entity.sub_entity_id.ProductCategoryId;
 import cody.ecommerce.cody_app.exception.*;
 import cody.ecommerce.cody_app.exception.DataExistedException;
 import cody.ecommerce.cody_app.repository.CategoryRepository;
 import cody.ecommerce.cody_app.repository.ProductCategoryRepository;
+import cody.ecommerce.cody_app.repository.ProductRepository;
 import cody.ecommerce.cody_app.service.CategoryService;
 import cody.ecommerce.cody_app.util.CompareUtil;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +23,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -28,6 +34,7 @@ import java.util.Set;
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final ProductCategoryRepository productCategoryRepository;
+    private final ProductRepository productRepository;
 
     @Override
     public List<Category> getCategoryById(Set<String> categoryIds) {
@@ -132,5 +139,67 @@ public class CategoryServiceImpl implements CategoryService {
             .orElseThrow(() -> new NotFoundException("Category not found",
                     Error.build("slug", List.of(slug))));
         return CategoryDTO.from(category);
+    }
+
+    @Override
+    public Integer assignProductsToCategory(String categoryId, Set<String> productIds) throws NotFoundException, BadRequestException {
+        List<Product> products = productRepository.findAllById(productIds);
+
+        categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new NotFoundException("Category not found", Error.build("category_id", List.of(categoryId))));
+
+        if (products.size() != productIds.size()) {
+            List<String> notFoundIds = productIds.stream()
+                    .filter(id -> products.stream().noneMatch(product -> product.getId().equals(id)))
+                    .toList();
+            throw new NotFoundException("Products not found", Error.build("product_id", notFoundIds));
+        }
+
+        List<String> existingProductIdsWithCategoryId = new ArrayList<>();
+        for (Product product : products) {
+            if (product.getCategories().stream().anyMatch(cat -> cat.getId().equals(categoryId))) {
+                existingProductIdsWithCategoryId.add(product.getId());
+            }
+        }
+        if (!existingProductIdsWithCategoryId.isEmpty()) {
+            throw new BadRequestException("Products already assigned to this category",
+                    Error.build("product_id", existingProductIdsWithCategoryId));
+        }
+        List<ProductCategory> productCategories = new ArrayList<>();
+        products.forEach(product -> {
+            productCategories.add(ProductCategory.of(product.getId(), categoryId));
+        });
+
+        return productCategoryRepository.saveAll(productCategories).size();
+    }
+
+    @Override
+    public Integer removeProductsFromCategory(String categoryId, Set<String> productIds) throws NotFoundException, BadRequestException {
+        categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new NotFoundException("Category not found",
+                        Error.build("category_id", List.of(categoryId)))
+                );
+
+        List<ProductCategoryId> productCategoryIds = new ArrayList<>();
+        productIds.forEach(productId -> {
+            productCategoryIds.add(new ProductCategoryId(productId, categoryId));
+        });
+
+        Set<String> notExistProductIdsWithCategory = new HashSet<>();
+        List<ProductCategory> productCategories = productCategoryRepository.findAllById(productCategoryIds);
+
+        for (ProductCategory productCategory : productCategories) {
+            if (productIds.stream().anyMatch(productId -> productCategory.getId().equals(productCategory.getId())))
+                continue;
+            notExistProductIdsWithCategory.add(productCategory.getId().getProductId());
+        }
+
+        if (!notExistProductIdsWithCategory.isEmpty()) {
+            throw new NotFoundException("Products not found in this category",
+                    Error.build("product_id", new ArrayList<>(notExistProductIdsWithCategory)));
+        }
+
+        productCategoryRepository.deleteAllById(productCategories.stream().map(ProductCategory::getId).toList());
+        return productCategories.size();
     }
 }

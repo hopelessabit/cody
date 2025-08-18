@@ -2,7 +2,9 @@ package cody.ecommerce.cody_app.controller;
 
 import cody.ecommerce.cody_app.dto.CategoryDTO;
 import cody.ecommerce.cody_app.dto.ResponseData;
+import cody.ecommerce.cody_app.dto.request.category.AssignProductRequest;
 import cody.ecommerce.cody_app.dto.request.category.CreateCategoryRequest;
+import cody.ecommerce.cody_app.dto.request.category.RemoveProductRequest;
 import cody.ecommerce.cody_app.dto.request.category.UpdateCategoryRequest;
 import cody.ecommerce.cody_app.service.CategoryService;
 import cody.ecommerce.cody_app.util.ResponseUtil;
@@ -13,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/category")
+@RequestMapping("/api/v1/categories")
 @SecurityRequirement(name = "Bearer")
 @RequiredArgsConstructor
 public class CategoryController {
@@ -53,5 +55,16 @@ public class CategoryController {
     public ResponseEntity<ResponseData<Void>> deleteCategory(@PathVariable String categoryId) {
         return ResponseUtil.getResponse(() -> categoryService.delete(categoryId), "Category deleted successfully");
     }
+
+    @PostMapping("/admin/{categoryId}/products")
+    public ResponseEntity<ResponseData<Integer>> addProductToCategory(@PathVariable String categoryId, @RequestBody AssignProductRequest request) {
+        return ResponseUtil.getResponse(() -> categoryService.assignProductsToCategory(categoryId, request.getProductIds()), "Product added to category successfully");
+    }
+
+    @DeleteMapping("/admin/{categoryId}/products")
+    public ResponseEntity<ResponseData<Integer>> removeProductFromCategory(@PathVariable String categoryId, @RequestBody RemoveProductRequest request) {
+        return ResponseUtil.getResponse(() -> categoryService.removeProductsFromCategory(categoryId, request.getProductIds()), "Product removed from category successfully");
+    }
+
 
 }

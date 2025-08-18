@@ -237,6 +237,152 @@ public interface CategoryService {
      * @see #update(String, UpdateCategoryRequest) for modifying categories instead of deletion
      */
     Void delete(String id);
-
+    /**
+     * Retrieves a category by its unique slug identifier.
+     *
+     * <p>This method provides an alternative way to access category data using
+     * the human-readable slug instead of the UUID. Slugs are typically used
+     * in URLs for SEO-friendly category pages.</p>
+     *
+     * <p><b>Behavior:</b></p>
+     * <ul>
+     *   <li>Performs exact slug matching (case-sensitive)</li>
+     *   <li>Returns complete category information as DTO</li>
+     *   <li>Validates slug existence before retrieval</li>
+     *   <li>Read-only operation with no side effects</li>
+     * </ul>
+     *
+     * <p><b>Slug Format:</b></p>
+     * <ul>
+     *   <li>URL-friendly string representation of category name</li>
+     *   <li>Must be unique across all categories</li>
+     *   <li>Cannot be null or empty</li>
+     * </ul>
+     *
+     * <p><b>Usage Example:</b></p>
+     * <pre>{@code
+     * try {
+     *     CategoryDTO category = categoryService.getBySlug("electronics");
+     *     // Process category data
+     * } catch (NotFoundException e) {
+     *     // Handle case where slug doesn't exist
+     * }
+     * }</pre>
+     *
+     * @param slug The unique slug identifier of the category. Cannot be null or empty.
+     * @return {@link CategoryDTO} containing the category information
+     * @throws NotFoundException if no category exists with the provided slug
+     * @throws IllegalArgumentException if slug is null or empty
+     *
+     * @see #getById(String) for retrieving category by UUID
+     * @see #getAll(int, int, String, String) for browsing all categories
+     */
     CategoryDTO getBySlug(String slug);
+
+    /**
+     * Assigns multiple products to a specific category.
+     *
+     * <p>This method creates associations between products and a category through
+     * the ProductCategory junction entity. It validates that both the category
+     * and all products exist before creating the associations.</p>
+     *
+     * <p><b>Validation Process:</b></p>
+     * <ul>
+     *   <li>Verifies category exists with the provided ID</li>
+     *   <li>Validates all product IDs exist in the system</li>
+     *   <li>Checks that products are not already assigned to this category</li>
+     *   <li>Prevents duplicate assignments</li>
+     * </ul>
+     *
+     * <p><b>Assignment Behavior:</b></p>
+     * <ul>
+     *   <li>Creates ProductCategory junction records for each product-category pair</li>
+     *   <li>Batch operation for improved performance</li>
+     *   <li>Atomic transaction - all assignments succeed or all fail</li>
+     *   <li>Returns count of successfully created associations</li>
+     * </ul>
+     *
+     * <p><b>Error Handling:</b></p>
+     * <ul>
+     *   <li>Throws {@link NotFoundException} if category or any product doesn't exist</li>
+     *   <li>Throws {@link BadRequestException} if products already assigned to category</li>
+     *   <li>Provides detailed error information with specific IDs that caused failure</li>
+     * </ul>
+     *
+     * <p><b>Usage Example:</b></p>
+     * <pre>{@code
+     * Set<String> productIds = Set.of("product1", "product2", "product3");
+     * try {
+     *     Integer count = categoryService.assignProductsToCategory("category-id", productIds);
+     *     // count contains number of products successfully assigned
+     * } catch (NotFoundException e) {
+     *     // Handle missing category or products
+     * } catch (BadRequestException e) {
+     *     // Handle already assigned products
+     * }
+     * }</pre>
+     *
+     * @param categoryId The unique identifier of the category. Cannot be null or empty.
+     * @param productIds Set of product IDs to assign to the category. Cannot be null or empty.
+     * @return {@link Integer} representing the number of products successfully assigned
+     * @throws NotFoundException if category doesn't exist or any product IDs are not found
+     * @throws BadRequestException if any products are already assigned to this category
+     * @throws IllegalArgumentException if categoryId or productIds is null/empty
+     *
+     * @see #removeProductsFromCategory(String, Set) for removing product-category associations
+     */
+    Integer assignProductsToCategory(String categoryId, Set<String> productIds) throws NotFoundException, BadRequestException;
+
+    /**
+     * Removes product associations from a specific category.
+     *
+     * <p>This method deletes the associations between products and a category by
+     * removing the corresponding ProductCategory junction records. It validates
+     * that the category exists and that all specified products are currently
+     * assigned to the category before removal.</p>
+     *
+     * <p><b>Validation Process:</b></p>
+     * <ul>
+     *   <li>Verifies category exists with the provided ID</li>
+     *   <li>Checks that all specified products are currently assigned to this category</li>
+     *   <li>Validates ProductCategory associations exist before removal</li>
+     *   <li>Prevents removal of non-existent associations</li>
+     * </ul>
+     *
+     * <p><b>Removal Behavior:</b></p>
+     * <ul>
+     *   <li>Deletes ProductCategory junction records for each product-category pair</li>
+     *   <li>Batch deletion operation for improved performance</li>
+     *   <li>Atomic transaction - all removals succeed or all fail</li>
+     *   <li>Returns count of successfully removed associations</li>
+     * </ul>
+     *
+     * <p><b>Error Handling:</b></p>
+     * <ul>
+     *   <li>Throws {@link NotFoundException} if category doesn't exist</li>
+     *   <li>Throws {@link NotFoundException} if products not found in this category</li>
+     *   <li>Provides detailed error information with specific product IDs not found</li>
+     * </ul>
+     *
+     * <p><b>Usage Example:</b></p>
+     * <pre>{@code
+     * Set<String> productIds = Set.of("product1", "product2");
+     * try {
+     *     Integer count = categoryService.removeProductsFromCategory("category-id", productIds);
+     *     // count contains number of products successfully removed
+     * } catch (NotFoundException e) {
+     *     // Handle missing category or product associations
+     * }
+     * }</pre>
+     *
+     * @param categoryId The unique identifier of the category. Cannot be null or empty.
+     * @param productIds Set of product IDs to remove from the category. Cannot be null or empty.
+     * @return {@link Integer} representing the number of products successfully removed from category
+     * @throws NotFoundException if category doesn't exist or products not found in this category
+     * @throws BadRequestException if validation fails for the removal operation
+     * @throws IllegalArgumentException if categoryId or productIds is null/empty
+     *
+     * @see #assignProductsToCategory(String, Set) for creating product-category associations
+     */
+    Integer removeProductsFromCategory(String categoryId, Set<String> productIds) throws NotFoundException, BadRequestException;
 }
