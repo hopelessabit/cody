@@ -142,6 +142,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional
     public Integer assignProductsToCategory(String categoryId, Set<String> productIds) throws NotFoundException, BadRequestException {
         List<Product> products = productRepository.findAllById(productIds);
 
@@ -174,6 +175,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional
     public Integer removeProductsFromCategory(String categoryId, Set<String> productIds) throws NotFoundException, BadRequestException {
         categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new NotFoundException("Category not found",
