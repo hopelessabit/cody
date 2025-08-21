@@ -14,6 +14,9 @@ public class Error<T>{
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Map<String, String> errors;
 
+    public Error(){
+
+    }
 
     public Error(String detail) {
         this.detail = detail;
