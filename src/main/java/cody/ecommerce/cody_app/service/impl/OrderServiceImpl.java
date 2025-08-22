@@ -215,7 +215,7 @@ public class OrderServiceImpl implements OrderService {
             errors.put("payment_status", "Order must be paid before confirmation");
         }
         if (!errors.isEmpty()) {
-            throw new BadRequestException("Bad request", Error.build("Order cannot be confirmed", errors)));
+            throw new BadRequestException("Bad request", Error.build("Order cannot be confirmed", errors));
         }
 
         OrderStatus result = new OrderStatus(latestOrderStatus, SecurityContextHolderUtil.getAccount());
