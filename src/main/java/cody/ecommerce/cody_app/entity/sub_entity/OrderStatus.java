@@ -37,6 +37,9 @@ public class OrderStatus {
     @JoinColumn(name = "order_id", referencedColumnName = "id", nullable = false, insertable = false, updatable = false)
     private Order order;
 
+    @Column(name = "modifier_id", nullable = false, length = 50)
+    private String modifierId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "modifier_id", referencedColumnName = "id", nullable = false, insertable = false, updatable = false)
     private User modifier;
@@ -48,6 +51,15 @@ public class OrderStatus {
         this.orderId = order.getId();
         this.deliveryStatus = OrderStatusDeliveryEnum.PND; // Default delivery status
         this.paymentStatus = paymentStatus;
-        this.modifier = modifier;
+        this.modifierId = modifier.getId();
+        this.modifiedAt = LocalDateTime.now();
+    }
+
+    public OrderStatus(OrderStatus latest, User modifier) {
+        this.orderId = latest.getOrderId();
+        this.deliveryStatus = latest.getDeliveryStatus();
+        this.paymentStatus = latest.getPaymentStatus();
+        this.modifierId = modifier.getId();
+        this.modifiedAt = LocalDateTime.now();
     }
 }
