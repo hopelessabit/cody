@@ -2,6 +2,8 @@ package cody.ecommerce.cody_app.dto;
 
 import cody.ecommerce.cody_app.entity.User;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
@@ -10,6 +12,8 @@ import java.time.LocalDateTime;
  * Use only id and name for basic info.
  * Set all fields for detailed info.
  */
+@Getter
+@Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserDTO {
     private String id;
@@ -19,54 +23,22 @@ public class UserDTO {
     private String email;
     private String role;
     private LocalDateTime createdAt;
-
-    // Getters and setters
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+    private String buyerPhone;
 
     public static UserDTO fromBasic(User user) {
         if (user == null) return null;
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());
         dto.setName(user.getName());
+        return dto;
+    }
+
+    public static UserDTO fromBasic(User user, String buyerPhone) {
+        if (user == null) return null;
+        UserDTO dto = new UserDTO();
+        dto.setId(user.getId());
+        dto.setName(user.getName());
+        dto.setBuyerPhone(buyerPhone);
         return dto;
     }
 

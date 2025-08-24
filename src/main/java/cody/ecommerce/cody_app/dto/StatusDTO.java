@@ -13,8 +13,7 @@ public class StatusDTO <T extends Enum<T> & IEnumerate> {
     }
 
     public StatusDTO(T status) {
-        this.name = status.name();
-        this.fullName = status.getFullName();
+        this.name = status.getFullName();
         this.vietnamese = status.getVietnamese();
     }
 }

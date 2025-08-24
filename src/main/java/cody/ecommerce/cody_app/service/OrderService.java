@@ -1,11 +1,16 @@
 package cody.ecommerce.cody_app.service;
 
+import cody.ecommerce.cody_app.constant.OrderMainStatusEnum;
+import cody.ecommerce.cody_app.constant.OrderPaymentStatusEnum;
+import cody.ecommerce.cody_app.constant.OrderStatusDeliveryEnum;
 import cody.ecommerce.cody_app.dto.OrderDTO;
 import cody.ecommerce.cody_app.dto.request.order.CreateOrderRequest;
 import cody.ecommerce.cody_app.dto.request.order.UpdateOrderAddressRequest;
 import cody.ecommerce.cody_app.dto.request.order.UpdateOrderStatusRequest;
-import cody.ecommerce.cody_app.entity.Order;
 import cody.ecommerce.cody_app.exception.BadRequestException;
+import org.springframework.data.domain.Page;
+
+import java.math.BigDecimal;
 
 /**
  * Service interface for managing orders in the e-commerce application.
@@ -56,7 +61,7 @@ public interface OrderService {
      *
      * @param request the request containing the new address URL
      * @param orderId the ID of the order to update
-     * @return {@link OrderDTO} entity with updated address information
+     * @return {@link Void} entity with updated address information
      * @throws BadRequestException if:
      *         <ul>
      *           <li>Order with the given ID is not found</li>
@@ -69,7 +74,7 @@ public interface OrderService {
      *           <li>Current user is not the buyer of the order</li>
      *         </ul>
      */
-    OrderDTO updateAddress(UpdateOrderAddressRequest request, String orderId);
+    Void updateAddress(UpdateOrderAddressRequest request, String orderId);
 
     /**
      * Retrieves an order by its ID.
@@ -167,5 +172,99 @@ public interface OrderService {
      */
     Void userReturnOrder(String orderId);
 
+    /**
+     * Confirms that an order has been completed by the buyer.
+     *
+     * <p>This operation allows buyers to confirm that they have received their order
+     * and are satisfied with the delivery. This confirmation is required for orders
+     * that have been delivered and paid for.
+     *
+     * <p>The operation can only be performed when:
+     * <ul>
+     *   <li>Delivery status is DLN (Delivered)</li>
+     *   <li>Payment status is PD (Paid)</li>
+     *   <li>Only the buyer who placed the order can confirm completion</li>
+     * </ul>
+     *
+     * <p>Upon successful confirmation:
+     * <ul>
+     *   <li>A new order status is created with delivery status U_CF (User Confirmed)</li>
+     *   <li>The main order status is updated to CP (Completed)</li>
+     * </ul>
+     *
+     * @param orderId the ID of the order to confirm as completed
+     * @return null (void operation)
+     * @throws BadRequestException if:
+     *         <ul>
+     *           <li>Order with the given ID is not found</li>
+     *           <li>Order status information is missing</li>
+     *           <li>Order has not been delivered yet (delivery status != DLN)</li>
+     *           <li>Order has not been paid yet (payment status != PD)</li>
+     *         </ul>
+     * @throws SecurityException if:
+     *         <ul>
+     *           <li>User is not authenticated</li>
+     *           <li>Current user is not the buyer of the order</li>
+     *         </ul>
+     */
     Void userConfirmOrderCompleted(String orderId);
+
+    /**
+     * Retrieves all orders for the currently authenticated user with pagination and sorting.
+     *
+     * <p>This method returns orders where the current user is the buyer. The results
+     * are paginated and can be sorted by various fields. Only orders belonging to
+     * the authenticated user are returned for security purposes.
+     *
+     * <p>Each returned order includes:
+     * <ul>
+     *   <li>Complete order details (items, pricing, addresses)</li>
+     *   <li>All order status history</li>
+     *   <li>Buyer and seller information</li>
+     *   <li>Latest delivery and payment status</li>
+     * </ul>
+     *
+     * @param page page number (0-based, defaults to 0 if negative)
+     * @param size page size (1-100, defaults to 10 if invalid)
+     * @param sortBy field name to sort by (defaults to "name" if null/empty)
+     * @param sortDirection sort direction ("ASC" or "DESC", defaults to "ASC" if null/empty)
+     * @return Page of OrderDTO containing the user's orders with pagination metadata
+     * @throws SecurityException if user is not authenticated
+     */
+    Page<OrderDTO> getAllUserOrders(int page, int size, String sortBy, String sortDirection);
+
+    /**
+     * Retrieves all orders with filtering and pagination support for admin/staff users.
+     *
+     * @param orderId optional order ID filter (partial match supported)
+     * @param buyerId optional buyer ID filter
+     * @param buyerName optional buyer name filter (partial match)
+     * @param buyerPhone optional buyer phone filter
+     * @param sellerId optional seller ID filter
+     * @param sellerName optional seller name filter (partial match)
+     * @param mainStatus optional main order status filter
+     * @param deliveryStatus optional latest delivery status filter
+     * @param paymentStatus optional latest payment status filter
+     * @param minPrice optional minimum total price filter
+     * @param maxPrice optional maximum total price filter
+     * @param startDate optional start date filter (ISO format: yyyy-MM-dd)
+     * @param endDate optional end date filter (ISO format: yyyy-MM-dd)
+     * @param page page number (0-based, default: 0)
+     * @param size page size (1-100, default: 10)
+     * @param sortBy sort field (default: "createdAt")
+     * @param sortDirection sort direction ("ASC" or "DESC", default: "DESC")
+     * @return Page of OrderDTO matching the filter criteria
+     */
+    Page<OrderDTO> getAllOrders(String orderId, String buyerId, String buyerName, String buyerPhone,
+                                String sellerId, String sellerName, OrderMainStatusEnum mainStatus,
+                                OrderStatusDeliveryEnum deliveryStatus, OrderPaymentStatusEnum paymentStatus,
+                                BigDecimal minPrice, BigDecimal maxPrice, String startDate, String endDate,
+                                int page, int size, String sortBy, String sortDirection);
+
+    /**
+     * Marks an order as paid.
+     * @param orderId the ID of the order to mark as paid
+     * @return Void
+     */
+    Void markOrderAsPaid(String orderId);
 }

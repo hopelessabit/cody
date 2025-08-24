@@ -7,7 +7,9 @@ public enum Role implements IEnumerate{
     US ("USER","Người dùng"),
     AD ("ADMIN","Admin"),
     EP ("EMPLOYEE","Quản lý"),
-    MN ("MANAGER","Quản lý");
+    MN ("MANAGER","Quản lý"),
+    DL ("DELIVERY","Người giao hàng"),
+    BK ("BANK", "Ngân hàng"),;
 
     final String fullName;
     final String vietnamese;
@@ -31,5 +33,13 @@ public enum Role implements IEnumerate{
 
     public boolean isManager() {
         return this == MN;
+    }
+
+    public boolean isBank() {
+        return this == BK;
+    }
+
+    public boolean isDelivery() {
+        return this == DL;
     }
 }

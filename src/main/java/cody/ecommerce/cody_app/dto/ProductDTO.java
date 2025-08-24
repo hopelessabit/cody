@@ -92,7 +92,11 @@ public class ProductDTO {
         dto.setId(product.getId());
         dto.setName(product.getName());
         dto.setDescription(product.getDescription());
+        dto.setSlug(product.getSlug());
         dto.setMetaDescription(product.getMetaDescription());
+        dto.setPrice(product.getPrice());
+        dto.setOriginalPrice(product.getOriginalPrice());
+        dto.setStockQuantity(product.getStockQuantity());
         dto.setSlug(product.getSlug());
         // Map categories to basic DTOs
         if (product.getCategories() != null) {

@@ -335,7 +335,7 @@ public class ProductServiceImpl implements ProductService {
         Specification<Product> spec = createProductSpecification(keyword, categoryId, forStaff);
         Page<Product> productPage = productRepository.findAll(spec, pageable);
 
-        return productPage.map(ProductDTO::basicList);
+        return productPage.map(ProductDTO::basicDetail);
     }
 
     private Specification<Product> createProductSpecification(String keyword, String categoryId, boolean forStaff) {

@@ -2,9 +2,11 @@ package cody.ecommerce.cody_app.entity.sub_entity;
 
 import cody.ecommerce.cody_app.constant.OrderPaymentStatusEnum;
 import cody.ecommerce.cody_app.constant.OrderStatusDeliveryEnum;
+import cody.ecommerce.cody_app.entity.BaseEntity;
 import cody.ecommerce.cody_app.entity.Order;
 import cody.ecommerce.cody_app.entity.User;
 import cody.ecommerce.cody_app.entity.sub_entity_id.OrderStatusId;
+import cody.ecommerce.cody_app.util.IdUtil;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,19 +18,14 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@IdClass(OrderStatusId.class)
-public class OrderStatus {
-
-    @Id
+public class OrderStatus extends BaseEntity {
     @Column(name = "order_id", nullable = false, length = 50)
     private String orderId;
 
-    @Id
     @Column(name = "delivery_status", length = 50)
     @Enumerated(EnumType.STRING)
     private OrderStatusDeliveryEnum deliveryStatus;
 
-    @Id
     @Column(name = "payment_status", length = 50)
     @Enumerated(EnumType.STRING)
     private OrderPaymentStatusEnum paymentStatus;
@@ -48,6 +45,7 @@ public class OrderStatus {
     private LocalDateTime modifiedAt;
 
     public OrderStatus(Order order, OrderPaymentStatusEnum paymentStatus, User modifier) {
+        super();
         this.orderId = order.getId();
         this.deliveryStatus = OrderStatusDeliveryEnum.PND; // Default delivery status
         this.paymentStatus = paymentStatus;
@@ -56,6 +54,7 @@ public class OrderStatus {
     }
 
     public OrderStatus(OrderStatus latest, User modifier) {
+        super();
         this.orderId = latest.getOrderId();
         this.deliveryStatus = latest.getDeliveryStatus();
         this.paymentStatus = latest.getPaymentStatus();

@@ -8,6 +8,6 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface OrderStatusRepository extends JpaRepository<OrderStatus, OrderStatusId> {
+public interface OrderStatusRepository extends JpaRepository<OrderStatus, String> {
     Optional<OrderStatus> findFirstByOrderIdOrderByModifiedAtDesc(String orderId);
 }
