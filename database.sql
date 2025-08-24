@@ -219,9 +219,12 @@ CREATE TABLE orders (
     id VARCHAR(50) PRIMARY KEY,
     seller_id VARCHAR(50),
     buyer_id VARCHAR(50),
+    buyer_name varchar(100),
+    buyer_phone varchar(20),
     total_price DECIMAL(18,2),
-    current_status NVARCHAR(50),
+    main_status varchar(2) check (main_status in ('PS','CP','CN'))
     buyer_rating INT,
+    decline_reason varchar(500),
     created_at DATETIME,
     FOREIGN KEY (buyer_id) REFERENCES users(id),
     FOREIGN KEY (seller_id) REFERENCES users(id)
@@ -234,18 +237,19 @@ CREATE TABLE order_items (
     quantity INT,
     price DECIMAL(18,2),
     PRIMARY KEY (order_id, product_id),
-    FOREIGN KEY (order_id) REFERENCES orders(id),
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id)
 );
 
 -- ORDER_STATUS
 CREATE TABLE order_status (
     order_id VARCHAR(50),
-    status NVARCHAR(50),
+    delivery_status varchar(50) not null check (delivery_status in ('PND','CF','DLN','DLD','U_CF','DC','CNL','D_FL','D_RG','D_RT','R_CF','R_PD','R_AP','R_DLN','R_DLD')),
+    payment_status varchar(50) not null check (payment_status in ('UP','PD','C_UP','C_CL','RFG','RFD','CP')),
 	modifier_id VARCHAR(50),
     modified_at DATETIME,
     PRIMARY KEY (order_id, status),
-    FOREIGN KEY (order_id) REFERENCES orders(id),
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
     FOREIGN KEY (modifier_id) REFERENCES users(id)
 );
 
