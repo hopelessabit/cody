@@ -37,7 +37,7 @@ jobs:
             ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ github.sha }}
             ${{ env.IMAGE_NAME }}:main-${{ github.run_id }}
- 
+
   deploy:
     runs-on: ubuntu-latest
     needs: build-and-deploy
