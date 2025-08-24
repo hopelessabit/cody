@@ -3,49 +3,94 @@ name: Build and Deploy with Docker
 on:
   push:
     branches:
-      - main   # change if needed
+      - main
+
+env:
+  IMAGE_NAME: hopelessabit/cody-app
+  CONTAINER_NAME: cody-app
 
 jobs:
-  build-and-deploy:
+  test:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build JAR
-        run: mvn clean package -DskipTests
-
-      - name: Build Docker image
-        run: docker build -t springboot-app:latest .
-
-      - name: Save Docker image as tar
-        run: docker save springboot-app:latest -o springboot-app.tar
-
-      - name: Copy image to server
-        uses: appleboy/scp-action@v0.1.7
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
         with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "springboot-app.tar"
-          target: "~/springboot-app/"
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
 
-      - name: Load & Run Docker container on server
+      - name: Run tests
+        run: mvn clean test
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
+          tags: |
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.IMAGE_NAME }}:main-${{ github.run_id }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+      - name: Deploy on server
         uses: appleboy/ssh-action@v0.1.8
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            cd ~/springboot-app
-            docker load -i springboot-app.tar
-            docker stop springboot-app || true
-            docker rm springboot-app || true
-            docker run -d --name springboot-app -p 8080:8080 springboot-app:latest
+            set -e
+
+            echo "🚀 Deploying container: ${{ env.CONTAINER_NAME }}"
+
+            # Pull latest image
+            docker pull ${{ env.IMAGE_NAME }}:latest
+
+            # Stop and backup old container
+            if [ "$(docker ps -q -f name=${{ env.CONTAINER_NAME }})" ]; then
+              echo "Stopping old container..."
+              docker stop ${{ env.CONTAINER_NAME }}
+              docker rm ${{ env.CONTAINER_NAME }}
+            fi
+
+            # Run new container with env file
+            docker run -d \
+              --name ${{ env.CONTAINER_NAME }} \
+              --restart unless-stopped \
+              --env-file /root/springboot-app/.env \
+              -p 8080:8080 \
+              ${{ env.IMAGE_NAME }}:latest
+
+            # Cleanup unused images
+            docker image prune -f
