@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  IMAGE_NAME: hopelessabit/cody-app
+  IMAGE_NAME: hopelessabit/cody
   CONTAINER_NAME: cody-app
 
 jobs:
