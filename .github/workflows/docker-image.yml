@@ -74,3 +74,4 @@ jobs:
 
             # Cleanup unused images
             docker image prune -f
+            
