@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.servers.Server;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -19,11 +21,37 @@ import org.springframework.context.annotation.Configuration;
         bearerFormat = "JWT",
         in = SecuritySchemeIn.HEADER)
 public class SwaggerConfig {
+
+    @Value("${app.swagger.default-server:http://localhost:8080}")
+    private String defaultServerUrl;
+
+    @Value("${spring.profiles.active:dev}")
+    private String activeProfile;
+
     @Bean
     public OpenAPI customOpenAPI() {
-        return new OpenAPI()
+        OpenAPI openAPI = new OpenAPI()
                 .info(new Info()
-                        .title("Wellcome to Cody E-commerce API")
-                        .description(""));
+                        .title("Welcome to Cody E-commerce API")
+                        .description("E-commerce API documentation"));
+
+        // The first server added becomes the default
+        if ("prod".equals(activeProfile)) {
+            openAPI.addServersItem(new Server()
+                            .url(defaultServerUrl)
+                            .description("Production server"))
+                    .addServersItem(new Server()
+                            .url("http://localhost:8080")
+                            .description("Development server"));
+        } else {
+            openAPI.addServersItem(new Server()
+                            .url("http://localhost:8080")
+                            .description("Development server"))
+                    .addServersItem(new Server()
+                            .url(defaultServerUrl)
+                            .description("Production server"));
+        }
+
+        return openAPI;
     }
 }
