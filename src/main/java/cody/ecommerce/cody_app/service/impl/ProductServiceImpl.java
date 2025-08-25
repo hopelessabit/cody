@@ -11,12 +11,14 @@ import cody.ecommerce.cody_app.entity.Category;
 import cody.ecommerce.cody_app.entity.Product;
 import cody.ecommerce.cody_app.entity.relation_entity.ProductCategory;
 import cody.ecommerce.cody_app.entity.sub_entity.ProductImage;
+import cody.ecommerce.cody_app.entity.sub_entity.ProductIncluded;
 import cody.ecommerce.cody_app.entity.sub_entity_id.ProductCategoryId;
 import cody.ecommerce.cody_app.exception.BadRequestException;
 import cody.ecommerce.cody_app.exception.GlobalException;
 import cody.ecommerce.cody_app.exception.NotFoundException;
 import cody.ecommerce.cody_app.repository.ProductCategoryRepository;
 import cody.ecommerce.cody_app.repository.ProductImageRepository;
+import cody.ecommerce.cody_app.repository.ProductIncludedRepository;
 import cody.ecommerce.cody_app.repository.ProductRepository;
 import cody.ecommerce.cody_app.service.CategoryService;
 import cody.ecommerce.cody_app.service.ProductService;
@@ -44,6 +46,7 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryService categoryService;
     private final ProductImageRepository productImageRepository;
     private final ProductCategoryRepository productCategoryRepository;
+    private final ProductIncludedRepository productIncludedRepository;
 
     @Override
     public ProductDTO getById(String id) {
@@ -76,6 +79,7 @@ public class ProductServiceImpl implements ProductService {
         }
         List<Category> categories = categoryService.getCategoryById(request.getCategoryIds());
 
+        List<Product> productIncludeds = new ArrayList<>();
         Map<String, String> errors = new HashMap<>();
         if(productRepository.existsBySlug(request.getSlug())) {
             errors.put("slug", request.getSlug());
@@ -93,6 +97,25 @@ public class ProductServiceImpl implements ProductService {
         product.set(request);
         // Set categories and images if needed (requires additional logic)
         Product savedProduct = productRepository.save(product);
+
+        if (!request.getIncludedIds().isEmpty()) {
+            productIncludeds = productRepository.findAllById(request.getIncludedIds());
+            if (productIncludeds.size() != request.getIncludedIds().size()) {
+                Set<String> foundIds = productIncludeds.stream().map(Product::getId).collect(Collectors.toSet());
+                List<String> notFoundIds = request.getIncludedIds().stream()
+                        .filter(id -> !foundIds.contains(id))
+                        .toList();
+                throw new NotFoundException("Một số sản phẩm được bao gồm theo không tồn tại.", Error.build("included_ids", notFoundIds));
+            }
+
+            List<ProductIncluded> productIncludedList = productIncludeds.stream()
+                    .map(includedProduct -> {
+                        return ProductIncluded.from(product.getId(), includedProduct.getId());
+                    }).toList();
+            productIncludedRepository.saveAll(productIncludedList);
+            product.setIncludedProducts(productIncludedList);
+        }
+
         List<ProductCategory> productCategories = request.getCategoryIds().stream()
                 .map(categoryId -> {
                     return ProductCategory.of(savedProduct.getId(), categoryId);

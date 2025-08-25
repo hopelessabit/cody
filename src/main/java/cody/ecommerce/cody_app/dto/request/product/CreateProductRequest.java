@@ -23,6 +23,7 @@ public class CreateProductRequest {
     private BigDecimal price;
     private BigDecimal originalPrice;
     private Integer  stockQuantity;
+    private Set<String> includedIds;
     private Set<String> categoryIds;
     private Set<CreateProductImageDTO> images;
     private Boolean isHidden = true;

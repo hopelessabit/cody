@@ -22,6 +22,10 @@ public class ProductIncluded {
         this.includedProductId = includedProductId;
     }
 
+    public static ProductIncluded from(String productId, String includedProductId) {
+        return new ProductIncluded(productId, includedProductId);
+    }
+
     public String getProductId() {
         return productId;
     }
