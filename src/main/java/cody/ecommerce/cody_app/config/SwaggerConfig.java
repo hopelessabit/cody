@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Configuration;
         in = SecuritySchemeIn.HEADER)
 public class SwaggerConfig {
 
-    @Value("${app.swagger.default-server:http://localhost:8080}")
+    @Value("${app.swagger.default-server:https://www.cody-be.online}")
     private String defaultServerUrl;
 
     @Value("${spring.profiles.active:dev}")
@@ -34,23 +34,12 @@ public class SwaggerConfig {
                 .info(new Info()
                         .title("Welcome to Cody E-commerce API")
                         .description("E-commerce API documentation"));
-
-        // The first server added becomes the default
-        if ("prod".equals(activeProfile)) {
-            openAPI.addServersItem(new Server()
-                            .url(defaultServerUrl)
-                            .description("Production server"))
-                    .addServersItem(new Server()
-                            .url("http://localhost:8080")
-                            .description("Development server"));
-        } else {
-            openAPI.addServersItem(new Server()
-                            .url("http://localhost:8080")
-                            .description("Development server"))
-                    .addServersItem(new Server()
-                            .url(defaultServerUrl)
-                            .description("Production server"));
-        }
+        openAPI.addServersItem(new Server()
+                        .url("http://localhost:8080")
+                        .description("Development server"))
+                .addServersItem(new Server()
+                        .url(defaultServerUrl)
+                        .description("Production server"));
 
         return openAPI;
     }
