@@ -22,6 +22,7 @@ public class UpdateProductRequest {
     private Boolean isHidden; // Whether the product is hidden from public view
     private List<UpdateProductCategoryRequest> category; // IDs of categories to associate
     private List<UpdateProductImageRequest> image;   // URLs of images to update/add
+    //TODO: included products
 
     public Error<String> validate() {
         Map<String, String> errors = new HashMap<>();
