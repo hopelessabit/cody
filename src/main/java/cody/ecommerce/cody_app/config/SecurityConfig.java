@@ -117,14 +117,18 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(Arrays.asList(
-                "http://localhost:*",
-                "https://localhost:*",
-                "https://cody-be.online",
-                "https://www.cody-be.online"
+//                "http://localhost:*",
+//                "https://localhost:*",
+//                "https://cody-be.online",
+//                "https://www.cody-be.online",
+                "http://localhost:5174",
+                "http://localhost:5173",
+                "https://localhost:5174",
+                "https://localhost:5173"
         ));
 //        configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "x-lang" ));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "x-lang"));
         configuration.setAllowCredentials(true); // Allow credentials
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
