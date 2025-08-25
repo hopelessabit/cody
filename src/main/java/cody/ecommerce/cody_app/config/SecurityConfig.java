@@ -120,6 +120,7 @@ public class SecurityConfig {
                 "http://localhost:5173",
                 "https://localhost:5174",
                 "https://localhost:5173"));
+        configuration.setAllowedOrigins(Arrays.asList("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
         configuration.setAllowCredentials(true); // Allow credentials
