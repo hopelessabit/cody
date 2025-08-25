@@ -98,20 +98,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public Void registerAccount(RegisterRequestDTO request) {
-        if (request == null || request.getEmail() == null || request.getPassword() == null) {
-            throw new BadRequestException("Thông tin đăng ký không hợp lệ");
-        }
-        if (request.getPassword().length() < 6) {
-            throw new BadRequestException("Mật khẩu phải có ít nhất 6 ký tự");
-        }
-        if (request.getFirstName() == null || request.getFirstName().isEmpty() || request.getLastName() == null || request.getLastName().isEmpty()) {
-            throw new BadRequestException("Tên không được để trống");
-        }
-        if (!request.getPassword().equals(request.getConfirmPassword())) {
-            throw new BadRequestException("Mật khẩu xác nhận không khớp");
+        Map<String, String> errors = request.validate().getErrors();
+        if (errors != null && !errors.isEmpty()) {
+            throw new BadRequestException("Thông tin đăng ký không hợp lệ", Error.build("Thông tin đăng ký không hợp lệ", errors));
         }
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new DataExistedException("Email đã được sử dụng");
+            errors.put("email", "Email đã được sử dụng");
+            throw new DataExistedException("Email đã được sử dụng", Error.build("Email đã được sử dụng", errors));
         }
         User newUser = User.initUser(request);
         newUser.setPassword(passwordEncoder.encode(request.getPassword()));
