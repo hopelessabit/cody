@@ -117,14 +117,15 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(Arrays.asList(
-//                "http://localhost:*",
-//                "https://localhost:*",
-//                "https://cody-be.online",
-//                "https://www.cody-be.online",
-                "http://localhost:5174",
-                "http://localhost:5173",
-                "https://localhost:5174",
-                "https://localhost:5173"
+                "http://localhost:*",
+                "https://localhost:*",
+                "https://cody-be.online",
+                "https://www.cody-be.online",
+//                "http://localhost:5174",
+//                "http://localhost:5173",
+//                "https://localhost:5174",
+//                "https://localhost:5173",
+                "https://cody-admin.netlify.app"
         ));
 //        configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
