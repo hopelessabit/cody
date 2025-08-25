@@ -35,11 +35,12 @@ public class SwaggerConfig {
                         .title("Welcome to Cody E-commerce API")
                         .description("E-commerce API documentation"));
         openAPI.addServersItem(new Server()
+                        .url(defaultServerUrl)
+                        .description("Production server"))
+                .addServersItem(new Server()
                         .url("http://localhost:8080")
                         .description("Development server"))
-                .addServersItem(new Server()
-                        .url(defaultServerUrl)
-                        .description("Production server"));
+                ;
 
         return openAPI;
     }
