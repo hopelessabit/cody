@@ -121,6 +121,7 @@ public class SecurityConfig {
                 "https://localhost:*",
                 "https://cody-be.online",
                 "https://www.cody-be.online",
+                "https://deploy-preview-20--cody-coconut-candy.netlify.app",
                 "https://cody-admin.netlify.app"
         ));
 //        configuration.setAllowedOriginPatterns(List.of("*"));
