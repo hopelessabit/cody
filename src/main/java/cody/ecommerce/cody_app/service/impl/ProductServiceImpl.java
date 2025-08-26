@@ -35,6 +35,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -72,6 +73,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public ProductDTO create(CreateProductRequest request) throws GlobalException {
         Error<String> error = request.validate();
         if (error != null && error.hasErrors()) {
@@ -98,7 +100,7 @@ public class ProductServiceImpl implements ProductService {
         // Set categories and images if needed (requires additional logic)
         Product savedProduct = productRepository.save(product);
 
-        if (!request.getIncludedIds().isEmpty()) {
+        if (request.getIncludedIds() != null && !request.getIncludedIds().isEmpty()) {
             productIncludeds = productRepository.findAllById(request.getIncludedIds());
             if (productIncludeds.size() != request.getIncludedIds().size()) {
                 Set<String> foundIds = productIncludeds.stream().map(Product::getId).collect(Collectors.toSet());
