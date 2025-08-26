@@ -1,6 +1,7 @@
 package cody.ecommerce.cody_app.dto;
 
 import cody.ecommerce.cody_app.entity.Product;
+import cody.ecommerce.cody_app.entity.sub_entity.ProductIncluded;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,6 +24,7 @@ public class ProductDTO {
     private BigDecimal originalPrice;
     private Integer stockQuantity;
     private Boolean isHidden;
+    private List<ProductDTO> products;
     private List<CategoryDTO> categories;
     private List<ProductImageDTO> images;
 
@@ -37,6 +39,14 @@ public class ProductDTO {
         productDTO.setOriginalPrice(product.getOriginalPrice());
         productDTO.setStockQuantity(product.getStockQuantity());
         productDTO.setIsHidden(product.getIsHidden());
+        if (product.getIncludedProducts() != null) {
+            productDTO.setProducts(
+                    product.getIncludedProducts().stream()
+                            .map(ProductIncluded::getIncludedProduct)
+                            .map(ProductDTO::basicList)
+                            .toList()
+            );
+        }
         if (product.getCategories() != null) {
             productDTO.setCategories(
                     product.getCategories().stream()
@@ -68,6 +78,14 @@ public class ProductDTO {
         dto.setName(product.getName());
         dto.setMetaDescription(product.getMetaDescription());
         dto.setSlug(product.getSlug());
+        if (product.getIncludedProducts() != null) {
+            dto.setProducts(
+                    product.getIncludedProducts().stream()
+                            .map(ProductIncluded::getIncludedProduct)
+                            .map(ProductDTO::basicList)
+                            .toList()
+            );
+        }
         // Map categories to basic DTOs
         if (product.getCategories() != null) {
             dto.setCategories(
@@ -98,6 +116,14 @@ public class ProductDTO {
         dto.setOriginalPrice(product.getOriginalPrice());
         dto.setStockQuantity(product.getStockQuantity());
         dto.setSlug(product.getSlug());
+        if (product.getIncludedProducts() != null) {
+            dto.setProducts(
+                    product.getIncludedProducts().stream()
+                            .map(ProductIncluded::getIncludedProduct)
+                            .map(ProductDTO::basicFrom)
+                            .toList()
+            );
+        }
         // Map categories to basic DTOs
         if (product.getCategories() != null) {
             dto.setCategories(

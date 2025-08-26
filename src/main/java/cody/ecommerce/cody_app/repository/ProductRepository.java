@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -18,4 +19,8 @@ public interface ProductRepository extends JpaRepository<Product, String>, JpaSp
     Optional<Product> findByIdAndIsHidden(String id, Boolean isHidden);
 
     Optional<Product> findBySlugAndIsHidden(String slug, Boolean isHidden);
+
+    Optional<Product> findByNameContainsIgnoreCase(String name);
+
+    List<Product> findAllByNameContainsIgnoreCase(String productName);
 }
