@@ -84,6 +84,13 @@
 			<artifactId>microsoft-graph</artifactId>
 			<version>6.23.0</version>
 		</dependency>
+        <dependency>
+            <groupId>vn.pipeline</groupId>
+            <artifactId>VnCoreNLP</artifactId>
+            <version>1.2</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/libs/VnCoreNLP-1.2.jar</systemPath>
+        </dependency>
 	</dependencies>
 
 	<build>

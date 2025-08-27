@@ -1,5 +1,8 @@
 FROM openjdk:17-jdk-slim
 
+COPY cody/libs/VnCoreNLP-1.2.jar /app/libs/
+COPY cody/libs/models /app/libs/models/
+
 WORKDIR /app
 
 # Copy Maven wrapper and pom.xml for dependency caching
@@ -24,3 +27,4 @@ EXPOSE 8080
 
 # Run the application
 ENTRYPOINT ["java", "-jar", "target/cody-app-0.0.1-SNAPSHOT.jar"]
+ENV CLASSPATH="/app/libs/VnCoreNLP-1.2.jar:$CLASSPATH"
