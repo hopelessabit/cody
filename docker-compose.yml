@@ -11,8 +11,6 @@ services:
       - key.env
     ports:
       - "8080:8080"
-    volumes:
-      - ./libs:/app/libs
 #    environment:
 #      - SPRING_CONFIG_LOCATION=classpath:/application.properties
 #      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}

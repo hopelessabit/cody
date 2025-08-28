@@ -5,6 +5,7 @@ import cody.ecommerce.cody_app.entity.Product;
 import cody.ecommerce.cody_app.repository.ProductRepository;
 import cody.ecommerce.cody_app.search.ProductSearchContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,51 +15,103 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AdvancedVietnameseChatBotService {
 
     private final ProductRepository productRepository;
     private final AdvancedVietnameseNLPService nlpService;
 
     public ChatbotResponse processMessage(String userMessage) {
+        log.info("Processing chatbot message: {}", userMessage);
+
         if (userMessage == null || userMessage.trim().isEmpty()) {
+            log.warn("Empty or null user message received");
             return new ChatbotResponse("Xin chào! Tôi có thể giúp bạn tìm sản phẩm. Hãy mô tả chi tiết sản phẩm bạn muốn!");
         }
 
-        // Analyze the full context of the query
-        ProductSearchContext context = nlpService.analyzeQuery(userMessage);
+        try {
+            // Analyze the full context of the query
+            log.debug("Analyzing query with NLP service");
+            ProductSearchContext context = nlpService.analyzeQuery(userMessage);
+            log.info("Query analysis complete. Categories: {}, Keywords: {}",
+                    context.getCategories(), context.getKeywords());
 
-        Set<Product> results = new HashSet<>();
+            Set<Product> results = new HashSet<>();
 
-        // Search by categories (highest priority)
-        for (String category : context.getCategories()) {
-            results.addAll(productRepository.findByCategory(category));
-        }
-
-        // Search by all keywords
-        for (String keyword : context.getKeywords()) {
-            if (keyword.length() >= 2) {
-                results.addAll(productRepository.searchByKeyword(keyword));
+            // Search by categories (highest priority)
+            for (String category : context.getCategories()) {
+                log.debug("Searching by category: {}", category);
+                try {
+                    List<Product> categoryProducts = productRepository.findByCategory(category);
+                    log.debug("Found {} products for category: {}", categoryProducts.size(), category);
+                    results.addAll(categoryProducts);
+                } catch (Exception e) {
+                    log.error("Error searching by category {}: {}", category, e.getMessage(), e);
+                }
             }
-        }
 
-        // Search by nouns (product names)
-        for (String noun : context.getNouns()) {
-            if (noun.length() >= 2) {
-                results.addAll(productRepository.searchByKeyword(noun));
+            // Search by all keywords
+            for (String keyword : context.getKeywords()) {
+                if (keyword.length() >= 2) {
+                    log.debug("Searching by keyword: {}", keyword);
+                    try {
+                        List<Product> keywordProducts = productRepository.searchByKeyword(keyword);
+                        log.debug("Found {} products for keyword: {}", keywordProducts.size(), keyword);
+                        results.addAll(keywordProducts);
+                    } catch (Exception e) {
+                        log.error("Error searching by keyword {}: {}", keyword, e.getMessage(), e);
+                    }
+                }
             }
+
+            // Search by nouns (product names)
+            for (String noun : context.getNouns()) {
+                if (noun.length() >= 2) {
+                    log.debug("Searching by noun: {}", noun);
+                    try {
+                        List<Product> nounProducts = productRepository.searchByKeyword(noun);
+                        log.debug("Found {} products for noun: {}", nounProducts.size(), noun);
+                        results.addAll(nounProducts);
+                    } catch (Exception e) {
+                        log.error("Error searching by noun {}: {}", noun, e.getMessage(), e);
+                    }
+                }
+            }
+
+            log.info("Total products found before filtering: {}", results.size());
+
+            // Apply price filtering
+            try {
+                results = filterByPriceRange(results, context.getPriceRange());
+                log.debug("Products after price filtering: {}", results.size());
+            } catch (Exception e) {
+                log.error("Error in price filtering: {}", e.getMessage(), e);
+            }
+
+            // Apply attribute filtering
+            try {
+                results = filterByAttributes(results, context.getAttributes());
+                log.debug("Products after attribute filtering: {}", results.size());
+            } catch (Exception e) {
+                log.error("Error in attribute filtering: {}", e.getMessage(), e);
+            }
+
+            List<Product> finalResults = new ArrayList<>(results);
+            log.info("Final results count: {}", finalResults.size());
+
+            ChatbotResponse response = new ChatbotResponse(generateContextualResponse(finalResults, context));
+            log.info("Generated response successfully");
+            return response;
+
+        } catch (Exception e) {
+            log.error("Error processing chatbot message: {}", e.getMessage(), e);
+            return new ChatbotResponse("Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại!");
         }
-
-        // Apply price filtering
-        results = filterByPriceRange(results, context.getPriceRange());
-
-        // Apply attribute filtering
-        results = filterByAttributes(results, context.getAttributes());
-
-        List<Product> finalResults = new ArrayList<>(results);
-        return new ChatbotResponse(generateContextualResponse(finalResults, context));
     }
 
     private Set<Product> filterByPriceRange(Set<Product> products, String priceRange) {
+        log.debug("Filtering {} products by price range: {}", products.size(), priceRange);
+
         if (priceRange == null || products.isEmpty()) {
             return products;
         }
@@ -83,52 +136,86 @@ public class AdvancedVietnameseChatBotService {
             BigDecimal min = minPrice != null ? minPrice : BigDecimal.ZERO;
             BigDecimal max = maxPrice != null ? maxPrice : new BigDecimal("999999999");
 
-            return products.stream()
-                    .filter(p -> p.getPrice().compareTo(min) >= 0 && p.getPrice().compareTo(max) <= 0)
-                    .collect(Collectors.toSet());
+            try {
+                return products.stream()
+                        .filter(p -> {
+                            if (p.getPrice() == null) {
+                                log.warn("Product with null price found: {}", p.getName());
+                                return false;
+                            }
+                            return p.getPrice().compareTo(min) >= 0 && p.getPrice().compareTo(max) <= 0;
+                        })
+                        .collect(Collectors.toSet());
+            } catch (Exception e) {
+                log.error("Error filtering by price range: {}", e.getMessage(), e);
+                return products;
+            }
         }
 
         return products;
     }
 
     private Set<Product> filterByAttributes(Set<Product> products, List<String> attributes) {
+        log.debug("Filtering {} products by attributes: {}", products.size(), attributes);
+
         if (attributes.isEmpty()) {
             return products;
         }
 
-        return products.stream()
-                .filter(product -> {
-                    String productText = (product.getName() + " " +
-                            (product.getDescription() != null ? product.getDescription() : "")).toLowerCase();
+        try {
+            return products.stream()
+                    .filter(product -> {
+                        try {
+                            String productText = (product.getName() + " " +
+                                    (product.getDescription() != null ? product.getDescription() : "")).toLowerCase();
 
-                    return attributes.stream().anyMatch(attr ->
-                            productText.contains(nlpService.normalizeText(attr)));
-                })
-                .collect(Collectors.toSet());
+                            return attributes.stream().anyMatch(attr ->
+                                    productText.contains(nlpService.normalizeText(attr)));
+                        } catch (Exception e) {
+                            log.error("Error processing product {} during attribute filtering: {}",
+                                    product.getId(), e.getMessage(), e);
+                            return false;
+                        }
+                    })
+                    .collect(Collectors.toSet());
+        } catch (Exception e) {
+            log.error("Error in attribute filtering: {}", e.getMessage(), e);
+            return products;
+        }
     }
 
+    // Keep other methods unchanged but add logging where needed...
     private String generateContextualResponse(List<Product> products, ProductSearchContext context) {
+        log.debug("Generating response for {} products", products.size());
+
         if (products.isEmpty()) {
             return generateNoResultsResponse(context);
         }
 
-        // Sort by relevance
-        products.sort((p1, p2) -> calculateRelevance(p2, context) - calculateRelevance(p1, context));
+        try {
+            // Sort by relevance
+            products.sort((p1, p2) -> calculateRelevance(p2, context) - calculateRelevance(p1, context));
 
-        String intent = context.getIntent();
+            String intent = context.getIntent();
+            log.debug("Generating response for intent: {}", intent);
 
-        switch (intent) {
-            case "PRICE_INQUIRY":
-                return generatePriceResponse(products, context);
-            case "RECOMMENDATION":
-                return generateRecommendationResponse(products, context);
-            case "BUY":
-                return generateBuyResponse(products, context);
-            default:
-                return generateSearchResponse(products, context);
+            switch (intent) {
+                case "PRICE_INQUIRY":
+                    return generatePriceResponse(products, context);
+                case "RECOMMENDATION":
+                    return generateRecommendationResponse(products, context);
+                case "BUY":
+                    return generateBuyResponse(products, context);
+                default:
+                    return generateSearchResponse(products, context);
+            }
+        } catch (Exception e) {
+            log.error("Error generating contextual response: {}", e.getMessage(), e);
+            return "Xin lỗi, đã có lỗi xảy ra khi tạo phản hồi.";
         }
     }
 
+    // Keep all other methods unchanged...
     private String generateNoResultsResponse(ProductSearchContext context) {
         StringBuilder response = new StringBuilder("Xin lỗi, không tìm thấy sản phẩm phù hợp với yêu cầu: ");
 
