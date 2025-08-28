@@ -1,8 +1,13 @@
 package cody.ecommerce.cody_app.entity.sub_entity_id;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.io.Serializable;
 import java.util.Objects;
 
+@Getter
+@Setter
 public class ProductIncludedId implements Serializable {
     private String productId;
     private String includedProductId;
