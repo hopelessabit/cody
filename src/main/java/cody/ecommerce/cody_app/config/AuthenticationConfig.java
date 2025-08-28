@@ -24,17 +24,11 @@ import java.util.Optional;
  * The type Authentication config.
  */
 @Configuration
-public class AuthenticationConfig implements UserDetailsService, WebMvcConfigurer {
+public class AuthenticationConfig implements WebMvcConfigurer {
     private final UserRepository userRepository;
 
     public AuthenticationConfig(UserRepository userRepository) {
         this.userRepository = userRepository;
-    }
-
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findFirstByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng"));
     }
 
     /**
@@ -61,7 +55,7 @@ public class AuthenticationConfig implements UserDetailsService, WebMvcConfigure
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(this);
+        authProvider.setUserDetailsService(userDetailsService());
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
@@ -88,14 +82,4 @@ public class AuthenticationConfig implements UserDetailsService, WebMvcConfigure
         return config.getAuthenticationManager();
     }
 
-    @Override
-    public void addCorsMappings(@NonNull CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOrigins("*")
-                .allowedMethods("*")
-                .allowedHeaders("*")
-                .exposedHeaders("*")
-                .allowCredentials(false)
-                .maxAge(3600);
-    }
 }
