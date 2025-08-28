@@ -17,6 +17,10 @@ import java.util.Set;
 
 @Getter
 @Setter
+@Table(name = "products", indexes = {
+        @Index(name = "idx_product_name", columnList = "name"),
+        @Index(name = "idx_product_hidden_stock", columnList = "isHidden, stockQuantity")
+})
 @Entity(name = "products")
 public class Product extends BaseEntity{
     @Nationalized
