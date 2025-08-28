@@ -369,7 +369,7 @@ public class ProductServiceImpl implements ProductService {
 
             addKeywordPredicate(keyword, cb, root, predicates);
             addCategoryIdPredicate(categoryId, cb, root, predicates, query);
-            if (forStaff)
+            if (!forStaff)
                 addIsHiddenPredicate(cb, root, predicates);
             return cb.and(predicates.toArray(new Predicate[0]));
         };
