@@ -3,10 +3,7 @@ package cody.ecommerce.cody_app.service.impl;
 import cody.ecommerce.cody_app.constant.Action;
 import cody.ecommerce.cody_app.dto.Error;
 import cody.ecommerce.cody_app.dto.ProductDTO;
-import cody.ecommerce.cody_app.dto.request.product.CreateProductRequest;
-import cody.ecommerce.cody_app.dto.request.product.UpdateProductCategoryRequest;
-import cody.ecommerce.cody_app.dto.request.product.UpdateProductImageRequest;
-import cody.ecommerce.cody_app.dto.request.product.UpdateProductRequest;
+import cody.ecommerce.cody_app.dto.request.product.*;
 import cody.ecommerce.cody_app.entity.Category;
 import cody.ecommerce.cody_app.entity.Product;
 import cody.ecommerce.cody_app.entity.relation_entity.ProductCategory;
@@ -163,7 +160,67 @@ public class ProductServiceImpl implements ProductService {
 
         updateProductImage(product, request.getImage());
 
+        updateProductIncludedImage(product, request.getIncludedProducts());
         return null;
+    }
+
+    private void updateProductIncludedImage(Product product, List<UpdateProductIncludedRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            return; // No included product updates to process
+        }
+        Set<String> addIncludedIds = new HashSet<>();
+        Set<String> removeIncludedIds = new HashSet<>();
+
+        for (UpdateProductIncludedRequest request : requests) {
+            if (request.getAction() == Action.ADD) {
+                addIncludedIds.add(request.getProductIncludedId());
+            } else if (request.getAction() == Action.REMOVE) {
+                removeIncludedIds.add(request.getProductIncludedId());
+            }
+        }
+
+        Set<String> existingIncludedIds = product.getIncludedProducts().stream()
+                .map(ProductIncluded::getIncludedProductId)
+                .collect(Collectors.toSet());
+
+        Map<String, String> errors = new HashMap<>();
+        StringBuilder errorIdsStringBuilder = new StringBuilder();
+        // Batch add included products
+        List<ProductIncluded> toAdd = new ArrayList<>();
+        for (String addId : addIncludedIds) {
+            if (existingIncludedIds.contains(addId)) {
+                errorIdsStringBuilder.append(addId).append(",");
+            }
+            toAdd.add(ProductIncluded.from(product.getId(), addId));
+        }
+        if (!errorIdsStringBuilder.isEmpty()) {
+            errorIdsStringBuilder.deleteCharAt(errorIdsStringBuilder.length() - 1);
+            errors.put("existed_included_product_id", errorIdsStringBuilder.toString());
+        }
+
+        errorIdsStringBuilder.setLength(0);
+        // Batch remove included products
+        List<ProductIncluded> toRemove = new ArrayList<>();
+        for (String removeId : removeIncludedIds) {
+            if (!existingIncludedIds.contains(removeId)) {
+                errorIdsStringBuilder.append(removeId).append(",");
+            }
+            toRemove.add(ProductIncluded.from(product.getId(), removeId));
+        }
+        if (!errorIdsStringBuilder.isEmpty()) {
+            errorIdsStringBuilder.deleteCharAt(errorIdsStringBuilder.length() - 1);
+            errors.put("not_found_included_product_id", errorIdsStringBuilder.toString());
+        }
+
+        if (!errors.isEmpty()) {
+            throw new BadRequestException("Cập nhật sản phẩm bao gồm không hợp lệ", Error.build("Thông tin không hợp lệ", errors));
+        }
+        if (!toAdd.isEmpty()) {
+            productIncludedRepository.saveAll(toAdd);
+        }
+
+        productIncludedRepository.deleteAll(toRemove);
+        productIncludedRepository.saveAll(toAdd);
     }
 
     public void updateProductCategory(Product product, List<UpdateProductCategoryRequest> requests) {

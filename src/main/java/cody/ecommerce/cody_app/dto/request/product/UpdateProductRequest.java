@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+//TODO: update included products
 @Getter
 @Setter
 public class UpdateProductRequest {
@@ -22,6 +22,7 @@ public class UpdateProductRequest {
     private Boolean isHidden; // Whether the product is hidden from public view
     private List<UpdateProductCategoryRequest> category; // IDs of categories to associate
     private List<UpdateProductImageRequest> image;   // URLs of images to update/add
+    private List<UpdateProductIncludedRequest> includedProducts; // IDs of products to include with this product
     //TODO: included products
 
     public Error<String> validate() {
