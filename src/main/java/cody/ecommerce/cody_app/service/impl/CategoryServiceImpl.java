@@ -20,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -191,7 +192,7 @@ public class CategoryServiceImpl implements CategoryService {
         List<ProductCategory> productCategories = productCategoryRepository.findAllById(productCategoryIds);
 
         for (ProductCategory productCategory : productCategories) {
-            if (productIds.stream().anyMatch(productId -> productCategory.getId().equals(productCategory.getId())))
+            if (productIds.contains(productCategory.getId().getProductId()))
                 continue;
             notExistProductIdsWithCategory.add(productCategory.getId().getProductId());
         }
@@ -203,5 +204,34 @@ public class CategoryServiceImpl implements CategoryService {
 
         productCategoryRepository.deleteAllById(productCategories.stream().map(ProductCategory::getId).toList());
         return productCategories.size();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<CategoryDTO> searchCategories(String keyword, int page, int size, String sortBy, String sortDirection) {
+        if (page < 0) page = 0;
+        if (size <= 0 || size > 100) size = 10;
+        if (sortBy == null || sortBy.trim().isEmpty()) sortBy = "name";
+        if (sortDirection == null || sortDirection.trim().isEmpty()) sortDirection = "ASC";
+        Sort.Direction direction = "DESC".equalsIgnoreCase(sortDirection) ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort sort = Sort.by(direction, sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Specification<Category> spec = createCategorySpecification(keyword);
+        Page<Category> categoryPage = categoryRepository.findAll(spec, pageable);
+        return categoryPage.map(CategoryDTO::from);
+    }
+
+    private Specification<Category> createCategorySpecification(String keyword) {
+        return (root, query, cb) -> {
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String searchTerm = "%" + keyword.toLowerCase() + "%";
+                return cb.or(
+                        cb.like(cb.lower(root.get("name")), searchTerm),
+                        cb.like(cb.lower(root.get("description")), searchTerm),
+                        cb.like(cb.lower(root.get("metaDescription")), searchTerm)
+                );
+            }
+            return cb.conjunction();
+        };
     }
 }

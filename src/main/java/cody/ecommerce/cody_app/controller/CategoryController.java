@@ -66,5 +66,17 @@ public class CategoryController {
         return ResponseUtil.getResponse(() -> categoryService.removeProductsFromCategory(categoryId, request.getProductIds()), "Product removed from category successfully");
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<ResponseData<Page<CategoryDTO>>> searchCategories(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "ASC") String sortDirection) {
+        return ResponseUtil.getResponse(() -> categoryService.searchCategories(
+                keyword, page, size, sortBy, sortDirection),
+                "Categories retrieved successfully");
+    }
+
 
 }

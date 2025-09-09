@@ -385,4 +385,16 @@ public interface CategoryService {
      * @see #assignProductsToCategory(String, Set) for creating product-category associations
      */
     Integer removeProductsFromCategory(String categoryId, Set<String> productIds) throws NotFoundException, BadRequestException;
+
+    /**
+     * Searches categories by keyword with pagination and sorting.
+     *
+     * @param keyword        the search keyword (can be null)
+     * @param page           the page number (0-based)
+     * @param size           the page size
+     * @param sortBy         the field to sort by
+     * @param sortDirection  the sort direction (ASC or DESC)
+     * @return a page of CategoryDTO matching the search criteria
+     */
+    Page<CategoryDTO> searchCategories(String keyword, int page, int size, String sortBy, String sortDirection);
 }
