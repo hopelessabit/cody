@@ -13,6 +13,7 @@ import cody.ecommerce.cody_app.repository.PostRepository;
 import cody.ecommerce.cody_app.repository.UserRepository;
 import cody.ecommerce.cody_app.service.PostService;
 import cody.ecommerce.cody_app.util.CompareUtil;
+import cody.ecommerce.cody_app.util.SecurityContextHolderUtil;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
@@ -66,8 +67,9 @@ public class PostServiceImpl implements PostService {
         if (error != null && error.hasErrors()) {
             throw new BadRequestException("Invalid post creation", error);
         }
-        User author = userRepository.findById(request.getAuthorId())
-                .orElseThrow(() -> new NotFoundException("Author not found", Error.build("authorId", List.of(request.getAuthorId()))));
+
+        User author = SecurityContextHolderUtil.getAccount();
+
         if (request.getSlug() != null && postRepository.findBySlug(request.getSlug()).isPresent()) {
             throw new BadRequestException("Slug already exists", Error.build("slug", List.of(request.getSlug())));
         }
