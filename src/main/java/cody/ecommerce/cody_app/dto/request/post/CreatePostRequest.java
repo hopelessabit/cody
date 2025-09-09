@@ -25,8 +25,6 @@ public class CreatePostRequest {
     @Nonnull
     private PostType type;
     private LocalDateTime publishedAt;
-    @Nonnull
-    private String authorId;
 
     public Error<String> validate() {
         Map<String, String> errors = new HashMap<>();
@@ -41,9 +39,6 @@ public class CreatePostRequest {
         }
         if (type == null) {
             errors.put("type", "Type is required");
-        }
-        if (authorId == null || authorId.trim().isEmpty()) {
-            errors.put("authorId", "Author is required");
         }
         return errors.isEmpty() ? null : Error.build("Invalid post creation", errors);
     }
