@@ -6,9 +6,9 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum PostType implements IEnumerate {
-    BLOG("blog", "Bài viết"),
-    DISCOUNT("discount", "Khuyến mãi"),
-    PRODUCT_DETAIL("product-detail", "Chi tiết sản phẩm");
+    BL("blog", "Bài viết"),
+    DC("discount", "Khuyến mãi"),
+    PD("product-detail", "Chi tiết sản phẩm");
 
     private final String fullName;
     private final String vietnamese;
