@@ -12,9 +12,9 @@ import java.util.function.Supplier;
 
 public class ResponseUtil {
     public final static String SQL_ERROR_MESSAGE = "Lỗi database";
-    public static <T> ResponseEntity<ResponseData<T>> getResponse(T response, String message){
-        return new ResponseEntity<>(ResponseData.ok(response, message), HttpStatus.OK);
-    }
+//    public static <T> ResponseEntity<ResponseData<T>> getResponse(T response, String message){
+//        return new ResponseEntity<>(ResponseData.ok(response, message), HttpStatus.OK);
+//    }
 
     public static <T> ResponseEntity<ResponseData<T>> getResponse(Supplier<T> responseSupplier, String message) {
         T response;
@@ -25,7 +25,7 @@ public class ResponseUtil {
         } catch (BadRequestException e) {
             return new ResponseEntity<>(ResponseData.error("Yêu cầu không hợp lệ", e.getError()), HttpStatus.BAD_REQUEST);
         } catch (DataExistedException e) {
-            return new ResponseEntity<>(ResponseData.error("Dữ liệu đã tồn tại", e.getError()), HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity<>(ResponseData.error("Dữ liệu đã tồn tại", e.getError()), HttpStatus.BAD_REQUEST);
         } catch (UnauthorizeException e) {
             return new ResponseEntity<>(ResponseData.error("", e.getError()), HttpStatus.FORBIDDEN);
         } catch (InternalServerErrorException e) {
