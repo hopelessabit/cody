@@ -160,7 +160,7 @@ public class ProductServiceImpl implements ProductService {
 
         updateProductImage(product, request.getImage());
 
-        updateProductIncludedImage(product, request.getIncludedProducts());
+        updateProductIncludedImage(product, request.getIncludedProduct());
         return null;
     }
 
