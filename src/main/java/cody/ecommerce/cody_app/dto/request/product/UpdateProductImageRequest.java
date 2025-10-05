@@ -11,7 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateProductImageRequest {
-    private String imageId;
+    private String imageId; // If null, it's a new image to be added
     private String imageUrl;
     private Boolean isMain;
     private Action action;

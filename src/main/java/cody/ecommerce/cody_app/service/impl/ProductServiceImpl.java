@@ -290,7 +290,6 @@ public class ProductServiceImpl implements ProductService {
         Map<String, String> errors = new HashMap<>();
         Set<String> addImageUrls = new HashSet<>();
         Set<String> removeImageIds = new HashSet<>();
-        Set<String> modifyImageIds = new HashSet<>();
 
         List<ProductImage> existingImages = product.getImages();
         Map<String, ProductImage> imageIdMap = existingImages.stream()
@@ -301,9 +300,11 @@ public class ProductServiceImpl implements ProductService {
             if (req.getAction() == Action.ADD) {
                 addImageUrls.add(req.getImageUrl());
             } else if (req.getAction() == Action.REMOVE) {
-                removeImageIds.add(req.getImageId());
-            } else if (req.getAction() == Action.MODIFY) {
-                modifyImageIds.add(req.getImageId());
+                if (req.getImageId() == null || req.getImageId().isEmpty()) {
+                    errors.put("missing_image_id", "Image id is required for remove action");
+                } else {
+                    removeImageIds.add(req.getImageId());
+                }
             }
         }
 
@@ -322,13 +323,6 @@ public class ProductServiceImpl implements ProductService {
             }
         }
 
-        // Validate MODIFY: check image exists
-        for (String imageId : modifyImageIds) {
-            if (!imageIdMap.containsKey(imageId)) {
-                errors.put("not_found_image_id", imageId);
-            }
-        }
-
         if (!errors.isEmpty()) {
             throw new BadRequestException("Invalid product image update", Error.build("Thông tin không hợp lệ", errors));
         }
@@ -336,19 +330,6 @@ public class ProductServiceImpl implements ProductService {
         // Process REMOVE
         List<ProductImage> imagesAfterRemove = new ArrayList<>(existingImages);
         imagesAfterRemove.removeIf(img -> removeImageIds.contains(img.getId()));
-
-        List<ProductImage> imagesToSave = new ArrayList<>();
-        // Process MODIFY
-        for (UpdateProductImageRequest req : requests) {
-            if (req.getAction() == Action.MODIFY) {
-                ProductImage img = imagesAfterRemove.stream().filter(productImage -> productImage.getId().equals(req.getImageId())).findFirst().orElse(null);
-                if (img == null)
-                    throw new NotFoundException("Hình ảnh cẩn chỉnh sửa không tồn tại.", Error.build("image_id", List.of(req.getImageId())));
-                img.setImageUrl(req.getImageUrl());
-                img.setIsMain(req.getIsMain());
-                imagesToSave.add(img);
-            }
-        }
 
         // Process ADD
         List<ProductImage> toAdd = requests.stream()
@@ -361,25 +342,24 @@ public class ProductServiceImpl implements ProductService {
                     return img;
                 }).toList();
 
-        // Add modified images (already updated in place)
         // Add new images
-        imagesToSave.addAll(toAdd);
+        imagesAfterRemove.addAll(toAdd);
 
         // Validate only one main image
-        long mainCount = imagesToSave.stream().filter(ProductImage::getIsMain).count();
+        long mainCount = imagesAfterRemove.stream().filter(ProductImage::getIsMain).count();
         if (mainCount != 1) {
             throw new BadRequestException("Sản phẩm phải/chỉ được có 1 hình ảnh chính.", Error.build("main_image", List.of("Must have exactly one main image")));
         }
 
+        // Remove images
         if (!removeImageIds.isEmpty()) {
             productImageRepository.deleteAllById(removeImageIds);
         }
 
-        // Persist changes
-        if (imagesToSave.isEmpty()) {
-            return;
+        // Persist new images
+        if (!toAdd.isEmpty()) {
+            productImageRepository.saveAll(toAdd);
         }
-        productImageRepository.saveAll(imagesToSave);
     }
 
     @Override
@@ -457,3 +437,4 @@ public class ProductServiceImpl implements ProductService {
         predicates.add(cb.isFalse(root.get("isHidden")));
     }
 }
+
