@@ -2,6 +2,7 @@ package cody.ecommerce.cody_app.entity;
 
 import cody.ecommerce.cody_app.constant.Role;
 import cody.ecommerce.cody_app.dto.request.auth.RegisterRequestDTO;
+import cody.ecommerce.cody_app.entity.sub_entity.EmployeeTask;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import org.hibernate.annotations.Nationalized;
@@ -12,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 @Entity(name = "users")
 public class User extends BaseEntity implements UserDetails {
@@ -33,6 +35,9 @@ public class User extends BaseEntity implements UserDetails {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "assignTo", fetch = FetchType.LAZY)
+    private Set<EmployeeTask> employeeTasks;
 
     @Override
     @JsonIgnore
@@ -118,6 +123,14 @@ public class User extends BaseEntity implements UserDetails {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Set<EmployeeTask> getEmployeeTasks() {
+        return employeeTasks;
+    }
+
+    public void setEmployeeTasks(Set<EmployeeTask> employeeTasks) {
+        this.employeeTasks = employeeTasks;
     }
 
     public static User initUser(RegisterRequestDTO requestDTO) {
