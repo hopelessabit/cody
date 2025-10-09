@@ -124,7 +124,7 @@ public class SecurityConfig {
                 "http://localhost:*",
                 "https://localhost:*",
                 "https://cody-be.online",
-                "https://cody-coconut-candy.netlify.app"
+                "https://cody-coconut-candy.netlify.app",
                 "https://www.cody-be.online",
                 "https://deploy-preview-20--cody-coconut-candy.netlify.app",
                 "https://cody-admin.netlify.app"
