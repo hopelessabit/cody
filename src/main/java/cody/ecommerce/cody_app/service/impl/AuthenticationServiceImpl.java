@@ -98,7 +98,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public Void registerAccount(RegisterRequestDTO request) {
-        Map<String, String> errors = request.validate().getErrors();
+        Map<String, String> errors = request.validate() != null ? request.validate().getErrors() : null;
         if (errors != null && !errors.isEmpty()) {
             throw new BadRequestException("Thông tin đăng ký không hợp lệ", Error.build("Thông tin đăng ký không hợp lệ", errors));
         }
