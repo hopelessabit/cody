@@ -345,12 +345,6 @@ public class ProductServiceImpl implements ProductService {
         // Add new images
         imagesAfterRemove.addAll(toAdd);
 
-        // Validate only one main image
-        long mainCount = imagesAfterRemove.stream().filter(ProductImage::getIsMain).count();
-        if (mainCount != 1) {
-            throw new BadRequestException("Sản phẩm phải/chỉ được có 1 hình ảnh chính.", Error.build("main_image", List.of("Must have exactly one main image")));
-        }
-
         // Remove images
         if (!removeImageIds.isEmpty()) {
             productImageRepository.deleteAllById(removeImageIds);
@@ -358,8 +352,15 @@ public class ProductServiceImpl implements ProductService {
 
         // Persist new images
         if (!toAdd.isEmpty()) {
-            productImageRepository.saveAll(toAdd);
+            imagesAfterRemove.addAll(toAdd);
         }
+
+        if (!imagesAfterRemove.stream().anyMatch(images -> images.getIsMain() == true)){
+            imagesAfterRemove.get(0).setIsMain(true);
+        }
+
+        productImageRepository.saveAll(imagesAfterRemove);
+
     }
 
     @Override
