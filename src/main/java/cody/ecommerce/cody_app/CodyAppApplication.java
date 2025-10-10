@@ -10,4 +10,5 @@ public class CodyAppApplication {
 		SpringApplication.run(CodyAppApplication.class, args);
 	}
 
+    
 }
