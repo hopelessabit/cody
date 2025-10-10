@@ -1,5 +1,6 @@
 package cody.ecommerce.cody_app.dto;
 
+import cody.ecommerce.cody_app.constant.GradingStatusEnum;
 import cody.ecommerce.cody_app.entity.sub_entity.EmployeeTask;
 import cody.ecommerce.cody_app.entity.Task;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -22,9 +23,9 @@ public class TaskDTO {
     private TrackByDTO trackBy;
     private LocalDateTime dueDate;
     private UserDTO createBy;
-    private String status;
+    private StatusDTO<GradingStatusEnum> status;
     private LocalDateTime createdAt;
-    private List<UserDTO> assignedTo;
+    private List<EmployeeTaskDTO> assignedTo;
 
     public static TaskDTO fromEntity(Task task) {
         if (task == null) return null;
@@ -35,13 +36,12 @@ public class TaskDTO {
         dto.setTrackBy(TrackByDTO.from(task.getTrackBy()));
         dto.setDueDate(task.getDueDate());
         dto.setCreateBy(UserDTO.fromBasic(task.getCreateBy()));
-        dto.setStatus(task.getStatus());
+        dto.setStatus(StatusDTO.from(task.getStatus()));
         dto.setCreatedAt(task.getCreatedAt());
         Set<EmployeeTask> list = task.getEmployeeTasks();
-        if (task.getEmployeeTasks() != null && !task.getEmployeeTasks().isEmpty()) {
-            dto.setAssignedTo(task.getEmployeeTasks().stream()
-                .map(EmployeeTask::getAssignTo)
-                .map(UserDTO::fromBasic)
+        if (list != null && !list.isEmpty()) {
+            dto.setAssignedTo(list.stream()
+                .map(EmployeeTaskDTO::from)
                 .toList());
         }
         return dto;

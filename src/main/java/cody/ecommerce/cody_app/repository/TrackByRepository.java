@@ -6,5 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TrackByRepository extends JpaRepository<TrackBy, String> {
+    TrackBy getById(String id);
 }
 

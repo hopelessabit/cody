@@ -19,7 +19,6 @@ public class CreateTaskRequest {
     @Nonnull
     private String trackById;
     private LocalDateTime dueDate;
-    private String status;
     private CreateEmployeeTaskRequest employees;
 
     public Error<String> validate() {

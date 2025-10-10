@@ -1,5 +1,6 @@
 package cody.ecommerce.cody_app.entity.sub_entity;
 
+import cody.ecommerce.cody_app.constant.GradingStatusEnum;
 import cody.ecommerce.cody_app.entity.Task;
 import cody.ecommerce.cody_app.entity.User;
 import jakarta.persistence.*;
@@ -33,12 +34,13 @@ public class EmployeeTask {
     @Column(name = "score", precision = 5, scale = 2)
     private BigDecimal score;
 
-    @Column(name = "evaluation_period", length = 50)
-    private String evaluationPeriod;
+    @Column(name = "status", length = 50)
+    private GradingStatusEnum status;
 
     public EmployeeTask(String taskId, String assignToId, User assignBy) {
         this.id = new EmployeeTaskId(taskId, assignToId);
         this.setAssignBy(assignBy);
+        this.status = GradingStatusEnum.PROGRESSING;
     }
 
     public static EmployeeTask of(String taskId, String assignToId, User assignBy) {
