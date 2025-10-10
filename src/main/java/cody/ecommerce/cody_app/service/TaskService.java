@@ -1,12 +1,14 @@
 package cody.ecommerce.cody_app.service;
 
+import cody.ecommerce.cody_app.constant.GradingStatusEnum;
 import cody.ecommerce.cody_app.dto.TaskDTO;
 import cody.ecommerce.cody_app.dto.request.task.CreateTaskRequest;
+import cody.ecommerce.cody_app.dto.request.task.GradingTaskRequest;
 import cody.ecommerce.cody_app.dto.request.task.UpdateTaskRequest;
-import cody.ecommerce.cody_app.entity.sub_entity.EmployeeTask;
 import cody.ecommerce.cody_app.exception.BadRequestException;
 import cody.ecommerce.cody_app.exception.GlobalException;
 import cody.ecommerce.cody_app.exception.NotFoundException;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -77,5 +79,26 @@ public interface TaskService {
      * @param status the new status
      * @return updated TaskDTO
      */
-    TaskDTO updateStatus(String taskId, String status) throws NotFoundException, BadRequestException;
+    TaskDTO updateStatus(String taskId, GradingStatusEnum status) throws NotFoundException, BadRequestException;
+
+    /**
+     * Searches tasks assigned to an employee, with optional filters for creation date and assigner.
+     *
+     * @param employeeId required employee id
+     * @param from optional start date (ISO string)
+     * @param to optional end date (ISO string)
+     * @param assignedBy optional assigner id
+     * @param page page number
+     * @param size page size
+     * @param sortBy sort field
+     * @param sortDirection sort direction
+     * @return paginated list of TaskDTO
+     */
+    Page<TaskDTO> searchTasksByEmployee(String employeeId, String from, String to, String assignedBy, int page, int size, String sortBy, String sortDirection);
+
+    /**
+     * Grade a task by assigning scores to employee assignments.
+     * Updates EmployeeTask status to COMPLETED when graded, and sets Task to COMPLETED if all are completed.
+     */
+    TaskDTO gradeTask(String taskId, java.util.List<GradingTaskRequest> gradings) throws NotFoundException, BadRequestException;
 }

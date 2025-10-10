@@ -1,5 +1,6 @@
 package cody.ecommerce.cody_app.dto.request.task;
 
+import cody.ecommerce.cody_app.constant.GradingStatusEnum;
 import cody.ecommerce.cody_app.dto.Error;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,7 +17,7 @@ public class UpdateTaskRequest {
     private String description;
     private String trackById;
     private LocalDateTime dueDate;
-    private String status;
+    private GradingStatusEnum status;
     private List<UpdateEmployeeTaskRequest> employees;
 
     public Error<String> validate() {

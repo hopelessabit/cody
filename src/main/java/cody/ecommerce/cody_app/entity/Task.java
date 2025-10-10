@@ -1,5 +1,6 @@
 package cody.ecommerce.cody_app.entity;
 
+import cody.ecommerce.cody_app.constant.GradingStatusEnum;
 import cody.ecommerce.cody_app.dto.request.task.CreateTaskRequest;
 import cody.ecommerce.cody_app.entity.sub_entity.EmployeeTask;
 import jakarta.persistence.*;
@@ -41,8 +42,9 @@ public class Task extends BaseEntity {
     @JoinColumn(name = "create_by", insertable = false, updatable = false)
     private User createBy;
 
-    @Column(length = 50)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status",length = 50)
+    private GradingStatusEnum status;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -61,8 +63,7 @@ public class Task extends BaseEntity {
         this.description = request.getDescription();
         this.trackById = request.getTrackById();
         this.dueDate = request.getDueDate();
-        this.status = request.getStatus();
         this.createById = createBy.getId();
-        this.status = request.getStatus();
+        this.status = GradingStatusEnum.PROGRESSING;
     }
 }

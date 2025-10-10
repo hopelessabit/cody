@@ -1,16 +1,17 @@
 package cody.ecommerce.cody_app.controller;
 
+import cody.ecommerce.cody_app.constant.GradingStatusEnum;
 import cody.ecommerce.cody_app.dto.TaskDTO;
 import cody.ecommerce.cody_app.dto.ResponseData;
 import cody.ecommerce.cody_app.dto.request.task.CreateTaskRequest;
 import cody.ecommerce.cody_app.dto.request.task.UpdateTaskRequest;
-import cody.ecommerce.cody_app.entity.Task;
-import cody.ecommerce.cody_app.entity.sub_entity.EmployeeTask;
+import cody.ecommerce.cody_app.dto.request.task.GradingTaskRequest;
+import cody.ecommerce.cody_app.exception.BadRequestException;
 import cody.ecommerce.cody_app.service.TaskService;
 import cody.ecommerce.cody_app.util.ResponseUtil;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import jakarta.validation.constraints.Null;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -49,10 +50,41 @@ public class TaskController {
         return ResponseUtil.getResponse(() -> taskService.delete(id), "Task deleted successfully");
     }
 
+    @GetMapping("/admin/tasks/employee/search")
+    public ResponseEntity<ResponseData<Page<TaskDTO>>> searchTasksByEmployee(
+            @RequestParam String employeeId,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to,
+            @RequestParam(required = false) String assignedBy,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDirection
+    ) {
+        if (employeeId == null || employeeId.isBlank()) {
+            throw new BadRequestException("employeeId is required");
+        }
+        return ResponseUtil.getResponse(
+            () -> taskService.searchTasksByEmployee(employeeId, from, to, assignedBy, page, size, sortBy, sortDirection),
+            "Tasks retrieved successfully"
+        );
+    }
+
+    @PostMapping("/admin/tasks/grading/task/{taskId}")
+    public ResponseEntity<ResponseData<TaskDTO>> gradeTask(
+            @PathVariable String taskId,
+            @RequestBody @Validated List<GradingTaskRequest> gradings
+    ) {
+        return ResponseUtil.getResponse(
+                () -> taskService.gradeTask(taskId, gradings),
+                "Task graded successfully"
+        );
+    }
+
     @PutMapping("/admin/tasks/update-status/{id}")
     public ResponseEntity<ResponseData<TaskDTO>> updateStatus(
             @PathVariable String id,
-            @RequestParam String status) {
+            @RequestParam GradingStatusEnum status) {
         return ResponseUtil.getResponse(() -> taskService.updateStatus(id, status), "Task status updated successfully");
     }
 }
