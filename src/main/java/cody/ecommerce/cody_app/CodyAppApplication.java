@@ -9,6 +9,5 @@ public class CodyAppApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(CodyAppApplication.class, args);
 	}
-
     
 }
