@@ -46,4 +46,55 @@ public class TaskDTO {
         }
         return dto;
     }
+
+    public static TaskDTO fromEntity(Task task, String employeeId) {
+        if (employeeId == null || employeeId.isBlank()) {
+            return fromEntity(task);
+        }
+        if (task == null) return null;
+        TaskDTO dto = new TaskDTO();
+        dto.setId(task.getId());
+        dto.setTitle(task.getTitle());
+        dto.setDescription(task.getDescription());
+        dto.setTrackBy(TrackByDTO.from(task.getTrackBy()));
+        dto.setDueDate(task.getDueDate());
+        dto.setCreateBy(UserDTO.fromBasic(task.getCreateBy()));
+        dto.setStatus(StatusDTO.from(task.getStatus()));
+        dto.setCreatedAt(task.getCreatedAt());
+        Set<EmployeeTask> list = task.getEmployeeTasks().stream()
+                .filter(et -> employeeId.equals(et.getId().getAssignToId()))
+                .collect(java.util.stream.Collectors.toSet());
+        if (!list.isEmpty()) {
+            dto.setAssignedTo(list.stream()
+                    .map(EmployeeTaskDTO::from)
+                    .toList());
+        }
+        return dto;
+    }
+
+    public static TaskDTO fromEntity(Task task, List<String> employeeIds) {
+        if (employeeIds == null || employeeIds.isEmpty()) {
+            return fromEntity(task);
+        }
+
+        if (task == null) return null;
+        TaskDTO dto = new TaskDTO();
+        dto.setId(task.getId());
+        dto.setTitle(task.getTitle());
+        dto.setDescription(task.getDescription());
+        dto.setTrackBy(TrackByDTO.from(task.getTrackBy()));
+        dto.setDueDate(task.getDueDate());
+        dto.setCreateBy(UserDTO.fromBasic(task.getCreateBy()));
+        dto.setStatus(StatusDTO.from(task.getStatus()));
+        dto.setCreatedAt(task.getCreatedAt());
+        Set<EmployeeTask> list = task.getEmployeeTasks().stream()
+                    .filter(et -> employeeIds.contains(et.getId().getAssignToId()))
+                    .collect(java.util.stream.Collectors.toSet());
+        if (!list.isEmpty()) {
+            dto.setAssignedTo(list.stream()
+                    .map(EmployeeTaskDTO::from)
+                    .toList());
+        }
+        return dto;
+    }
 }

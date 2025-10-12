@@ -50,22 +50,25 @@ public class TaskController {
         return ResponseUtil.getResponse(() -> taskService.delete(id), "Task deleted successfully");
     }
 
-    @GetMapping("/admin/tasks/employee/search")
+    @GetMapping("/tasks/search")
     public ResponseEntity<ResponseData<Page<TaskDTO>>> searchTasksByEmployee(
-            @RequestParam String employeeId,
+            @RequestParam(required = false) String employeeId,
             @RequestParam(required = false) String from,
             @RequestParam(required = false) String to,
             @RequestParam(required = false) String assignedBy,
+            @RequestParam(required = false) GradingStatusEnum taskStatus,
+            @RequestParam(required = false) GradingStatusEnum employeeTaskStatus,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "DESC") String sortDirection
+            @RequestParam(defaultValue = "DESC") String sortDirection,
+            @RequestParam(required = false, defaultValue = "false") Boolean showOnlyIncludedEmployee
     ) {
         if (employeeId == null || employeeId.isBlank()) {
             throw new BadRequestException("employeeId is required");
         }
         return ResponseUtil.getResponse(
-            () -> taskService.searchTasksByEmployee(employeeId, from, to, assignedBy, page, size, sortBy, sortDirection),
+            () -> taskService.searchTasksByEmployee(employeeId, from, to, assignedBy, taskStatus, employeeTaskStatus, page, size, sortBy, sortDirection, showOnlyIncludedEmployee),
             "Tasks retrieved successfully"
         );
     }

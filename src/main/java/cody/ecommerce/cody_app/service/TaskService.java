@@ -82,19 +82,34 @@ public interface TaskService {
     TaskDTO updateStatus(String taskId, GradingStatusEnum status) throws NotFoundException, BadRequestException;
 
     /**
-     * Searches tasks assigned to an employee, with optional filters for creation date and assigner.
+     * Searches tasks assigned to an employee, with optional filters for creation date, assigner, and status.
      *
      * @param employeeId required employee id
      * @param from optional start date (ISO string)
      * @param to optional end date (ISO string)
      * @param assignedBy optional assigner id
+     * @param taskStatus status of the main task
+     * @param employeeTaskStatus status of the employee's assignment
      * @param page page number
      * @param size page size
      * @param sortBy sort field
      * @param sortDirection sort direction
+     * @param showOnlyIncludedEmployee if true, only show EmployeeTaskDTO for the given employeeId
      * @return paginated list of TaskDTO
      */
-    Page<TaskDTO> searchTasksByEmployee(String employeeId, String from, String to, String assignedBy, int page, int size, String sortBy, String sortDirection);
+    Page<TaskDTO> searchTasksByEmployee(
+        String employeeId,
+        String from,
+        String to,
+        String assignedBy,
+        GradingStatusEnum taskStatus,
+        GradingStatusEnum employeeTaskStatus,
+        int page,
+        int size,
+        String sortBy,
+        String sortDirection,
+        Boolean showOnlyIncludedEmployee
+    );
 
     /**
      * Grade a task by assigning scores to employee assignments.

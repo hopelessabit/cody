@@ -2,6 +2,7 @@ package cody.ecommerce.cody_app.service.impl;
 
 import cody.ecommerce.cody_app.constant.Action;
 import cody.ecommerce.cody_app.constant.GradingStatusEnum;
+import cody.ecommerce.cody_app.constant.Role;
 import cody.ecommerce.cody_app.dto.TaskDTO;
 import cody.ecommerce.cody_app.dto.request.task.CreateTaskRequest;
 import cody.ecommerce.cody_app.dto.request.task.GradingTaskRequest;
@@ -276,40 +277,49 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public Page<TaskDTO> searchTasksByEmployee(String employeeId, String from, String to, String assignedBy, int page, int size, String sortBy, String sortDirection) {
+    public Page<TaskDTO> searchTasksByEmployee(
+        String employeeId,
+        String from,
+        String to,
+        String assignedBy,
+        GradingStatusEnum taskStatus,
+        GradingStatusEnum employeeTaskStatus,
+        int page,
+        int size,
+        String sortBy,
+        String sortDirection,
+        Boolean showOnlyIncludedEmployee
+    ) {
         if (employeeId == null || employeeId.isBlank()) {
             throw new BadRequestException("employeeId is required");
         }
-        if (page < 0) page = 0;
-        if (size <= 0 || size > 100) size = 10;
-        if (sortBy == null || sortBy.isBlank()) sortBy = "createdAt";
-        if (sortDirection == null || sortDirection.isBlank()) sortDirection = "DESC";
-
         Specification<Task> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             Join<Task, EmployeeTask> employeeTaskJoin = root.join("employeeTasks", JoinType.INNER);
             predicates.add(cb.equal(employeeTaskJoin.get("id").get("assignToId"), employeeId));
-
-            if (from != null && !from.isBlank()) {
-                LocalDateTime fromDate = LocalDateTime.parse(from);
-                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), fromDate));
-            }
-            if (to != null && !to.isBlank()) {
-                LocalDateTime toDate = LocalDateTime.parse(to);
-                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), toDate));
-            }
             if (assignedBy != null && !assignedBy.isBlank()) {
                 predicates.add(cb.equal(employeeTaskJoin.get("assignBy").get("id"), assignedBy));
+            }
+            if (from != null && !from.isBlank()) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), LocalDateTime.parse(from)));
+            }
+            if (to != null && !to.isBlank()) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), LocalDateTime.parse(to)));
+            }
+            if (taskStatus != null) {
+                predicates.add(cb.equal(root.get("status"), taskStatus));
+            }
+            if (employeeTaskStatus != null) {
+                predicates.add(cb.equal(employeeTaskJoin.get("status"), employeeTaskStatus));
             }
             query.distinct(true);
             return cb.and(predicates.toArray(new Predicate[0]));
         };
-
         Sort.Direction direction = "DESC".equalsIgnoreCase(sortDirection) ? Sort.Direction.DESC : Sort.Direction.ASC;
         Sort sort = Sort.by(direction, sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
-
-        Page<Task> tasks = taskRepository.findAll(spec, pageable);
-        return tasks.map(TaskDTO::fromEntity);
+        Page<Task> pageResult = taskRepository.findAll(spec, pageable);
+        // If showOnlyIncludedEmployee is true, filter EmployeeTaskDTOs in TaskDTO
+        return pageResult.map(task -> TaskDTO.fromEntity(task, showOnlyIncludedEmployee ? employeeId : null));
     }
 }
