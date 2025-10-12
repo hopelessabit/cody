@@ -23,6 +23,7 @@ public class UpdateProductRequest {
     private List<UpdateProductCategoryRequest> category; // IDs of categories to associate
     private List<UpdateProductImageRequest> image;   // URLs of images to update/add
     private List<UpdateProductIncludedRequest> includedProduct; // IDs of products to include with this product
+    private List<ProductIngredientRequest> ingredients; // List of ingredients for the product
 
     public Error<String> validate() {
         Map<String, String> errors = new HashMap<>();

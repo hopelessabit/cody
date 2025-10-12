@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,6 +27,7 @@ public class CreateProductRequest {
     private Set<String> includedIds;
     private Set<String> categoryIds;
     private Set<CreateProductImageDTO> images;
+    private List<ProductIngredientRequest> ingredients;
     private Boolean isHidden = true;
 
     public Error<String> validate() {

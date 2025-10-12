@@ -4,15 +4,17 @@ import cody.ecommerce.cody_app.constant.Action;
 import cody.ecommerce.cody_app.dto.Error;
 import cody.ecommerce.cody_app.dto.ProductDTO;
 import cody.ecommerce.cody_app.dto.request.product.*;
-import cody.ecommerce.cody_app.entity.Category;
-import cody.ecommerce.cody_app.entity.Product;
+import cody.ecommerce.cody_app.entity.*;
 import cody.ecommerce.cody_app.entity.relation_entity.ProductCategory;
 import cody.ecommerce.cody_app.entity.sub_entity.ProductImage;
 import cody.ecommerce.cody_app.entity.sub_entity.ProductIncluded;
+import cody.ecommerce.cody_app.entity.sub_entity.ProductIngredient;
 import cody.ecommerce.cody_app.entity.sub_entity_id.ProductCategoryId;
+import cody.ecommerce.cody_app.entity.sub_entity_id.ProductIngredientId;
 import cody.ecommerce.cody_app.exception.BadRequestException;
 import cody.ecommerce.cody_app.exception.GlobalException;
 import cody.ecommerce.cody_app.exception.NotFoundException;
+import cody.ecommerce.cody_app.repository.IngredientRepository;
 import cody.ecommerce.cody_app.repository.ProductCategoryRepository;
 import cody.ecommerce.cody_app.repository.ProductImageRepository;
 import cody.ecommerce.cody_app.repository.ProductIncludedRepository;
@@ -45,6 +47,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductImageRepository productImageRepository;
     private final ProductCategoryRepository productCategoryRepository;
     private final ProductIncludedRepository productIncludedRepository;
+    private final IngredientRepository ingredientRepository;
 
     @Override
     public ProductDTO getById(String id) {
@@ -132,6 +135,36 @@ public class ProductServiceImpl implements ProductService {
 
         List<ProductImage> savedImages = productImageRepository.saveAll(productImages);
         savedProduct.setImages(savedImages);
+
+        // Handle ingredients
+        Set<ProductIngredient> productIngredients = new HashSet<>();
+        if (request.getIngredients() != null) {
+            for (ProductIngredientRequest ingReq : request.getIngredients()) {
+                Ingredient ingredient = null;
+                if (ingReq.getId() != null && !ingReq.getId().isBlank()) {
+                    ingredient = ingredientRepository.findById(ingReq.getId()).orElse(null);
+                }
+                if (ingredient == null && ingReq.getName() != null && !ingReq.getName().isBlank()) {
+                    ingredient = ingredientRepository.findAll().stream()
+                        .filter(i -> i.getName().equalsIgnoreCase(ingReq.getName()))
+                        .findFirst().orElse(null);
+                    if (ingredient == null) {
+                        ingredient = new Ingredient();
+                        ingredient.setName(ingReq.getName());
+                        ingredient = ingredientRepository.save(ingredient);
+                    }
+                }
+                if (ingredient == null)
+                    throw new BadRequestException("Thông tin nguyên liệu không hợp lệ", Error.build("Nguyên liệu không tồn tại"));
+
+                ProductIngredient pi = new ProductIngredient();
+                pi.setId(new ProductIngredientId(product.getId(), ingredient.getId()));
+                pi.setProduct(product);
+                pi.setIngredient(ingredient);
+                productIngredients.add(pi);
+            }
+        }
+        product.setProductIngredients(productIngredients);
         Product result= productRepository.save(savedProduct);
         return ProductDTO.from(result);
     }
@@ -161,6 +194,37 @@ public class ProductServiceImpl implements ProductService {
         updateProductImage(product, request.getImage());
 
         updateProductIncludedImage(product, request.getIncludedProduct());
+        // Remove all existing ingredients
+        product.getProductIngredients().clear();
+        Set<ProductIngredient> productIngredients = new HashSet<>();
+        if (request.getIngredients() != null) {
+            for (ProductIngredientRequest ingReq : request.getIngredients()) {
+                Ingredient ingredient = null;
+                if (ingReq.getId() != null && !ingReq.getId().isBlank()) {
+                    ingredient = ingredientRepository.findById(ingReq.getId()).orElse(null);
+                }
+                if (ingredient == null && ingReq.getName() != null && !ingReq.getName().isBlank()) {
+                    ingredient = ingredientRepository.findAll().stream()
+                        .filter(i -> i.getName().equalsIgnoreCase(ingReq.getName()))
+                        .findFirst().orElse(null);
+                    if (ingredient == null) {
+                        ingredient = new Ingredient();
+                        ingredient.setName(ingReq.getName());
+                        ingredient = ingredientRepository.save(ingredient);
+                    }
+                }
+                if (ingredient != null) {
+                    ProductIngredient pi = new ProductIngredient();
+                    pi.setId(new ProductIngredientId(product.getId(), ingredient.getId()));
+                    pi.setProduct(product);
+                    pi.setIngredient(ingredient);
+                    productIngredients.add(pi);
+                } else {
+                    throw new BadRequestException("Thông tin nguyên liệu không hợp lệ", Error.build("Nguyên liệu không tồn tại"));
+                }
+            }
+        }
+        product.setProductIngredients(productIngredients);
         return null;
     }
 

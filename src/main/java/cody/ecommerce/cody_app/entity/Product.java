@@ -3,6 +3,7 @@ package cody.ecommerce.cody_app.entity;
 import cody.ecommerce.cody_app.dto.request.product.CreateProductRequest;
 import cody.ecommerce.cody_app.entity.sub_entity.ProductImage;
 import cody.ecommerce.cody_app.entity.sub_entity.ProductIncluded;
+import cody.ecommerce.cody_app.entity.sub_entity.ProductIngredient;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -77,6 +78,9 @@ public class Product extends BaseEntity{
 
     @OneToMany(mappedBy = "includedProductId", fetch = FetchType.LAZY)
     private List<ProductIncluded> includedInProducts;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ProductIngredient> productIngredients = new java.util.HashSet<>();
 
     public Product() {
         super();
