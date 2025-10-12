@@ -28,6 +28,7 @@ public class CreateProductRequest {
     private Set<String> categoryIds;
     private Set<CreateProductImageDTO> images;
     private List<ProductIngredientRequest> ingredients;
+    private String comboImage;
     private Boolean isHidden = true;
 
     public Error<String> validate() {
@@ -53,6 +54,18 @@ public class CreateProductRequest {
             errors.put("stockQuantity", "Stock quantity must be zero or positive");
         }
 
+        imageHaveOneMain(errors);
+
+        if (errors.isEmpty()) {
+            return null;
+        }
+        return Error.build("Bad request", errors);
+    }
+
+    public void imageHaveOneMain(Map<String, String> errors) {
+        if (images == null || images.isEmpty())
+            return ;
+
         boolean imageHasOneMain = false;
         for (CreateProductImageDTO createProductImageDTO : images) {
             if (createProductImageDTO.getImageUrl() == null || createProductImageDTO.getImageUrl().trim().isEmpty()) {
@@ -68,10 +81,5 @@ public class CreateProductRequest {
                 }
             }
         }
-
-        if (errors.isEmpty()) {
-            return null;
-        }
-        return Error.build("Bad request", errors);
     }
 }

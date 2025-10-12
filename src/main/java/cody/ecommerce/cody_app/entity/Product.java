@@ -63,6 +63,9 @@ public class Product extends BaseEntity{
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     private List<ProductImage> images;
 
+    @Column(name = "combo_image", length = 400)
+    private String comboImage;
+
     // Many-to-many: Product -> Category via ProductCategory
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -95,5 +98,6 @@ public class Product extends BaseEntity{
         this.setOriginalPrice(request.getOriginalPrice());
         this.setStockQuantity(request.getStockQuantity());
         this.setIsHidden(request.getIsHidden() == null || request.getIsHidden());
+        this.setComboImage(request.getComboImage() == null || request.getComboImage().isEmpty() ? null : request.getComboImage());
     }
 }

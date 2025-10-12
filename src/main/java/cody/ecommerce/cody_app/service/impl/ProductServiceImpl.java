@@ -1,6 +1,7 @@
 package cody.ecommerce.cody_app.service.impl;
 
 import cody.ecommerce.cody_app.constant.Action;
+import cody.ecommerce.cody_app.constant.Role;
 import cody.ecommerce.cody_app.dto.Error;
 import cody.ecommerce.cody_app.dto.ProductDTO;
 import cody.ecommerce.cody_app.dto.request.product.*;
@@ -22,6 +23,7 @@ import cody.ecommerce.cody_app.repository.ProductRepository;
 import cody.ecommerce.cody_app.service.CategoryService;
 import cody.ecommerce.cody_app.service.ProductService;
 import cody.ecommerce.cody_app.util.CompareUtil;
+import cody.ecommerce.cody_app.util.SecurityContextHolderUtil;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
@@ -75,6 +77,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public ProductDTO create(CreateProductRequest request) throws GlobalException {
+
         Error<String> error = request.validate();
         if (error != null && error.hasErrors()) {
             throw new BadRequestException("Thông tin tạo sản phẩm không hợp lệ", error);
@@ -97,6 +100,7 @@ public class ProductServiceImpl implements ProductService {
 
         Product product = new Product();
         product.set(request);
+
         // Set categories and images if needed (requires additional logic)
         Product savedProduct = productRepository.save(product);
 
@@ -124,49 +128,64 @@ public class ProductServiceImpl implements ProductService {
                 }).toList();
         savedProduct.setCategories(new HashSet<>(categories));
 
-        List<ProductImage> productImages = request.getImages().stream()
+        addImage(savedProduct, request.getImages());
+
+        addIngredients(product, request.getIngredients());
+
+        Product result= productRepository.save(savedProduct);
+        return ProductDTO.from(result);
+    }
+
+    public void addImage(Product product, Set<CreateProductImageDTO> images) {
+        if (images == null || images.isEmpty()) {
+            return; // No images to add
+        }
+        List<ProductImage> productImages = images.stream()
                 .map(image -> {
                     ProductImage productImage = new ProductImage();
-                    productImage.setProductId(savedProduct.getId());
+                    productImage.setProductId(product.getId());
                     productImage.setImageUrl(image.getImageUrl());
                     productImage.setIsMain(image.getIsMain());
                     return productImage;
                 }).toList();
 
         List<ProductImage> savedImages = productImageRepository.saveAll(productImages);
-        savedProduct.setImages(savedImages);
+        List<ProductImage> currentImages = product.getImages();
+        currentImages.addAll(savedImages);
+        product.setImages(currentImages);
+        productRepository.save(product);
+    }
 
-        // Handle ingredients
+    public void addIngredients(Product product, List<ProductIngredientRequest> ingredientRequests) {
+        if (ingredientRequests == null || ingredientRequests.isEmpty()) {
+            return; // No ingredients to add
+        }
         Set<ProductIngredient> productIngredients = new HashSet<>();
-        if (request.getIngredients() != null) {
-            for (ProductIngredientRequest ingReq : request.getIngredients()) {
-                Ingredient ingredient = null;
-                if (ingReq.getId() != null && !ingReq.getId().isBlank()) {
-                    ingredient = ingredientRepository.findById(ingReq.getId()).orElse(null);
-                }
-                if (ingredient == null && ingReq.getName() != null && !ingReq.getName().isBlank()) {
-                    ingredient = ingredientRepository.findAll().stream()
-                        .filter(i -> i.getName().equalsIgnoreCase(ingReq.getName()))
-                        .findFirst().orElse(null);
-                    if (ingredient == null) {
-                        ingredient = new Ingredient();
-                        ingredient.setName(ingReq.getName());
-                        ingredient = ingredientRepository.save(ingredient);
-                    }
-                }
-                if (ingredient == null)
-                    throw new BadRequestException("Thông tin nguyên liệu không hợp lệ", Error.build("Nguyên liệu không tồn tại"));
-
-                ProductIngredient pi = new ProductIngredient();
-                pi.setId(new ProductIngredientId(product.getId(), ingredient.getId()));
-                pi.setProduct(product);
-                pi.setIngredient(ingredient);
-                productIngredients.add(pi);
+        for (ProductIngredientRequest ingReq : ingredientRequests) {
+            Ingredient ingredient = null;
+            if (ingReq.getId() != null && !ingReq.getId().isBlank()) {
+                ingredient = ingredientRepository.findById(ingReq.getId()).orElse(null);
             }
+            if (ingredient == null && ingReq.getName() != null && !ingReq.getName().isBlank()) {
+                ingredient = ingredientRepository.findAll().stream()
+                    .filter(i -> i.getName().equalsIgnoreCase(ingReq.getName()))
+                    .findFirst().orElse(null);
+                if (ingredient == null) {
+                    ingredient = new Ingredient();
+                    ingredient.setName(ingReq.getName());
+                    ingredient = ingredientRepository.save(ingredient);
+                }
+            }
+            if (ingredient == null)
+                throw new BadRequestException("Thông tin nguyên liệu không hợp lệ", Error.build("Nguyên liệu không tồn tại"));
+
+            ProductIngredient pi = new ProductIngredient();
+            pi.setId(new ProductIngredientId(product.getId(), ingredient.getId()));
+            pi.setProduct(product);
+            pi.setIngredient(ingredient);
+            productIngredients.add(pi);
         }
         product.setProductIngredients(productIngredients);
-        Product result= productRepository.save(savedProduct);
-        return ProductDTO.from(result);
     }
 
     @Override
@@ -471,8 +490,11 @@ public class ProductServiceImpl implements ProductService {
 
             addKeywordPredicate(keyword, cb, root, predicates);
             addCategoryIdPredicate(categoryId, cb, root, predicates, query);
-            if (!forStaff)
+
+            if (!forStaff) {
                 addIsHiddenPredicate(cb, root, predicates);
+                notIncludeProductHaveComboImage(cb, root, predicates);
+            }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
@@ -500,6 +522,10 @@ public class ProductServiceImpl implements ProductService {
 
     private void addIsHiddenPredicate(CriteriaBuilder cb, Root<Product> root, List<Predicate> predicates) {
         predicates.add(cb.isFalse(root.get("isHidden")));
+    }
+
+    private void notIncludeProductHaveComboImage(CriteriaBuilder cb, Root<Product> root, List<Predicate> predicates) {
+        predicates.add(cb.isNull(root.get("comboImage")));
     }
 }
 

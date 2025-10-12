@@ -62,6 +62,11 @@ public class ProductController {
         return ResponseUtil.getResponse(() -> productService.create(request), "Product created successfully");
     }
 
+    @PostMapping("/create-combo")
+    public ResponseEntity<ResponseData<ProductDTO>> createCombo(@RequestBody @Validated CreateProductRequest request){
+        return ResponseUtil.getResponse(() -> productService.create(request), "Product created successfully");
+    }
+
     @PutMapping("/admin/update/{id}")
     public ResponseEntity<ResponseData<ProductDTO>> updateProduct(@PathVariable String id, @RequestBody @Validated UpdateProductRequest request) {
         return ResponseUtil.getResponse(() -> productService.update(id, request), "Product updated successfully");
