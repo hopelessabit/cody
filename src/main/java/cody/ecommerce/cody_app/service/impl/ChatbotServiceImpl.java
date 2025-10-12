@@ -65,9 +65,18 @@ public class ChatbotServiceImpl implements ChatbotService {
                     }
                     case "ingredients" -> {
                         Map<String, Object> data = new HashMap<>();
-                        data.put("ingredients", product.getProductIngredients().stream().map(pi -> pi.getIngredient().getName()).toList());
+                        List<String> ingredients = product.getProductIngredients().stream()
+                            .map(pi -> pi.getIngredient().getName())
+                            .filter(name -> name != null && !name.isBlank())
+                            .toList();
+                        data.put("ingredients", ingredients);
+                        if (ingredients.isEmpty()) {
+                            response.setMessage("Sản phẩm " + product.getName() + " không có thông tin về thành phần.");
+                        } else {
+                            String formatted = String.join(", ", ingredients);
+                            response.setMessage("Thành phần của " + product.getName() + ": " + formatted);
+                        }
                         response.setData(data);
-                        response.setMessage("Thành phần của " + product.getName() + ":");
                         response.setResponseType("list");
                     }
                     case "image" -> {
@@ -93,10 +102,20 @@ public class ChatbotServiceImpl implements ChatbotService {
                     summary.put("price", product.getPrice());
                     summary.put("stockQuantity", product.getStockQuantity());
                     summary.put("image", product.getImages() != null && !product.getImages().isEmpty() ? product.getImages().get(0).getImageUrl() : null);
-                    // Add message for each item
                     switch (infoType) {
                         case "price" -> summary.put("message", "Giá của " + product.getName() + " là " + product.getPrice() + "đ");
-                        case "ingredients" -> summary.put("message", "Thành phần của " + product.getName() + ": " + product.getProductIngredients().stream().map(pi -> pi.getIngredient().getName()).toList());
+                        case "ingredients" -> {
+                            List<String> ingredients = product.getProductIngredients().stream()
+                                .map(pi -> pi.getIngredient().getName())
+                                .filter(name -> name != null && !name.isBlank())
+                                .toList();
+                            if (ingredients.isEmpty()) {
+                                summary.put("message", "Sản phẩm " + product.getName() + " không có thông tin về thành phần.");
+                            } else {
+                                String formatted = String.join(", ", ingredients);
+                                summary.put("message", "Thành phần của " + product.getName() + ": " + formatted);
+                            }
+                        }
                         case "image" -> summary.put("message", "Hình ảnh của " + product.getName() + ":");
                         default -> summary.put("message", "Thông tin về " + product.getName());
                     }
