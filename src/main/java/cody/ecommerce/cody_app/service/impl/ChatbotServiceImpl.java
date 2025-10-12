@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.List;
 import java.util.HashMap;
@@ -27,13 +29,15 @@ public class ChatbotServiceImpl implements ChatbotService {
     public ChatbotApiResponse query(ChatbotQueryRequest request) {
         ChatbotApiResponse response = new ChatbotApiResponse();
         response.setEntityType(request.getEntityType());
-        response.setProductName(request.getProductName());
+        // Decode product name from URL encoding if present
+        String decodedProductName = request.getProductName() != null ? URLDecoder.decode(request.getProductName(), StandardCharsets.UTF_8) : null;
+        response.setProductName(decodedProductName);
         response.setOrderId(request.getOrderId());
         response.setInfoType(request.getInfoType());
 
         String entityType = request.getEntityType();
         String infoType = request.getInfoType();
-        String productName = request.getProductName();
+        String productName = decodedProductName;
         String orderId = request.getOrderId();
 
         if ("product".equalsIgnoreCase(entityType)) {
@@ -42,39 +46,66 @@ public class ChatbotServiceImpl implements ChatbotService {
                 response.setResponseType("text");
                 return response;
             }
-            Product product = productRepository.findByNameContainsIgnoreCase(productName).orElse(null);
-            if (product == null) {
-                response.setMessage("Xin lỗi, tôi không tìm thấy sản phẩm này trong hệ thống.");
+            List<Product> products = productRepository.findAllByNameContainsIgnoreCase(productName);
+            if (products == null || products.isEmpty()) {
+                response.setMessage("Xin lỗi, tôi không tìm thấy sản phẩm nào phù hợp.");
                 response.setResponseType("text");
                 return response;
             }
-            switch (infoType) {
-                case "price" -> {
-                    Map<String, Object> data = new HashMap<>();
-                    data.put("price", product.getPrice());
-                    response.setData(data);
-                    response.setMessage("Giá của " + product.getName() + " là " + product.getPrice() + "đ");
-                    response.setResponseType("text");
+            // If only one product, show details as before
+            if (products.size() == 1) {
+                Product product = products.get(0);
+                switch (infoType) {
+                    case "price" -> {
+                        Map<String, Object> data = new HashMap<>();
+                        data.put("price", product.getPrice());
+                        response.setData(data);
+                        response.setMessage("Giá của " + product.getName() + " là " + product.getPrice() + "đ");
+                        response.setResponseType("text");
+                    }
+                    case "ingredients" -> {
+                        Map<String, Object> data = new HashMap<>();
+                        data.put("ingredients", product.getProductIngredients().stream().map(pi -> pi.getIngredient().getName()).toList());
+                        response.setData(data);
+                        response.setMessage("Thành phần của " + product.getName() + ":");
+                        response.setResponseType("list");
+                    }
+                    case "image" -> {
+                        Map<String, Object> data = new HashMap<>();
+                        data.put("image", product.getImages().stream().map(ProductImage::getImageUrl).toList());
+                        data.put("name", product.getName());
+                        response.setData(data);
+                        response.setMessage("Hình ảnh của " + product.getName() + ":");
+                        response.setResponseType("image");
+                    }
+                    default -> {
+                        response.setMessage("Xin lỗi, tôi chưa hỗ trợ loại thông tin này cho sản phẩm.");
+                        response.setResponseType("text");
+                    }
                 }
-                case "ingredients" -> {
-                    Map<String, Object> data = new HashMap<>();
-                    data.put("ingredients", product.getProductIngredients().stream().map(ProductIngredient::getIngredient).toList()); // Assuming getIngredients() returns a List<String>
-                    response.setData(data);
-                    response.setMessage("Thành phần của " + product.getName() + ":");
-                    response.setResponseType("list");
-                }
-                case "image" -> {
-                    Map<String, Object> data = new HashMap<>();
-                    data.put("image", product.getImages().stream().map(ProductImage::getImageUrl).toList()); // Assuming getImageUrl() returns a String
-                    data.put("name", product.getName());
-                    response.setData(data);
-                    response.setMessage("Hình ảnh của " + product.getName() + ":");
-                    response.setResponseType("image");
-                }
-                default -> {
-                    response.setMessage("Xin lỗi, tôi chưa hỗ trợ loại thông tin này cho sản phẩm.");
-                    response.setResponseType("text");
-                }
+            } else {
+                // Multiple products found, group by infoType
+                Map<String, Object> data = new HashMap<>();
+                List<Map<String, Object>> infoList = products.stream().map(product -> {
+                    Map<String, Object> summary = new HashMap<>();
+                    summary.put("id", product.getId());
+                    summary.put("name", product.getName());
+                    summary.put("price", product.getPrice());
+                    summary.put("stockQuantity", product.getStockQuantity());
+                    summary.put("image", product.getImages() != null && !product.getImages().isEmpty() ? product.getImages().get(0).getImageUrl() : null);
+                    // Add message for each item
+                    switch (infoType) {
+                        case "price" -> summary.put("message", "Giá của " + product.getName() + " là " + product.getPrice() + "đ");
+                        case "ingredients" -> summary.put("message", "Thành phần của " + product.getName() + ": " + product.getProductIngredients().stream().map(pi -> pi.getIngredient().getName()).toList());
+                        case "image" -> summary.put("message", "Hình ảnh của " + product.getName() + ":");
+                        default -> summary.put("message", "Thông tin về " + product.getName());
+                    }
+                    return summary;
+                }).toList();
+                data.put(infoType, infoList);
+                response.setData(data);
+                response.setMessage("Tìm thấy " + products.size() + " sản phẩm phù hợp với từ khóa: '" + productName + "'.");
+                response.setResponseType("list");
             }
         } else if ("order".equalsIgnoreCase(entityType)) {
             if (orderId == null || orderId.isBlank()) {
@@ -91,14 +122,14 @@ public class ChatbotServiceImpl implements ChatbotService {
             switch (infoType) {
                 case "status" -> {
                     Map<String, Object> data = new HashMap<>();
-                    data.put("status", order.getMainStatus()); // Assuming getStatus() returns a String or Enum
+                    data.put("status", order.getMainStatus());
                     response.setData(data);
                     response.setMessage("Trạng thái đơn hàng " + order.getId() + ": " + order.getMainStatus());
                     response.setResponseType("text");
                 }
                 case "total" -> {
                     Map<String, Object> data = new HashMap<>();
-                    data.put("total", order.getTotalPrice()); // Assuming getTotal() returns a number
+                    data.put("total", order.getTotalPrice());
                     response.setData(data);
                     response.setMessage("Tổng tiền đơn hàng " + order.getId() + ": " + order.getTotalPrice() + "đ");
                     response.setResponseType("text");

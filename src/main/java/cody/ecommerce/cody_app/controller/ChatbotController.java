@@ -19,12 +19,12 @@ public class ChatbotController {
     private final AdvancedVietnameseChatBotService advancedVietnameseChatBotService;
     private final ChatbotService chatbotService;
 
-    @PostMapping("/v1/chatbot/")
+    @PostMapping("/v1/chatbot/v2/")
     public ResponseEntity<ResponseData<ChatbotResponse>> response(@RequestBody(required = false) ChatRequest request){
         return ResponseUtil.getResponse(() -> advancedVietnameseChatBotService.processMessage(request.getMessage()), "Lấy phản hồi từ chatbot thành công");
     }
 
-    @GetMapping("/chatbot")
+    @GetMapping("/v1/chatbot")
     public ResponseEntity<ChatbotApiResponse> queryChatbot(
             @RequestParam(name = "entity_type") String entityType,
             @RequestParam(name = "product_name", required = false) String productName,
