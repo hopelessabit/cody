@@ -17,12 +17,12 @@ public class ProductIngredient {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("productId")
-    @JoinColumn(name = "product_id")
+    @JoinColumn(name = "product_id", referencedColumnName = "id", insertable = false, updatable = false)
     private Product product;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("ingredientId")
-    @JoinColumn(name = "ingredient_id")
+    @JoinColumn(name = "ingredient_id", referencedColumnName = "id", insertable = false, updatable = false)
     private Ingredient ingredient;
 }
 
