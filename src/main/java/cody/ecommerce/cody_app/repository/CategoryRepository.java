@@ -17,7 +17,10 @@ public interface CategoryRepository extends JpaRepository<Category, String> {
     Optional<Category> findBySlug(String slug);
 
     @Query("select (count(c) > 0) from Category c where upper(c.name) = upper(?1) or upper(c.slug) = upper(?2)")
-    boolean existsByNameIgnoreCaseOrSlugIgnoreCase(String name, String slug);     // Custom query methods if needed
+    boolean existsByNameIgnoreCaseOrSlugIgnoreCase(String name, String slug);
+
+    @Query("select (count(c) > 0) from Category c where c.id != ?3 and (upper(c.name) = upper(?1) or upper(c.slug) = upper(?2))")
+    boolean existsByNameIgnoreCaseOrSlugIgnoreCaseAndIdNot(String name, String slug, String id);     // Custom query methods if needed
 
     Page<Category> findAll(Specification<Category> spec, Pageable pageable);
 }

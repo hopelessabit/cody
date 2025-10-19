@@ -2,6 +2,7 @@ package cody.ecommerce.cody_app.service;
 
 import cody.ecommerce.cody_app.dto.CategoryDTO;
 import cody.ecommerce.cody_app.dto.request.category.CreateCategoryRequest;
+import cody.ecommerce.cody_app.dto.request.category.SimpleCategoryRequest;
 import cody.ecommerce.cody_app.dto.request.category.UpdateCategoryRequest;
 import cody.ecommerce.cody_app.entity.Category;
 import cody.ecommerce.cody_app.exception.BadRequestException;
@@ -89,6 +90,28 @@ public interface CategoryService {
      * @see CreateCategoryRequest#validate() for validation rules
      */
     CategoryDTO create(CreateCategoryRequest request) throws BadRequestException;
+
+    /**
+     * Creates a new category with only a name.
+     *
+     * <p>This is a simplified version of category creation that only requires
+     * a category name. The system will automatically generate a slug from the name
+     * and set minimal required fields.</p>
+     *
+     * <p><b>Validation Rules:</b></p>
+     * <ul>
+     *   <li>Category name must be unique (case-insensitive)</li>
+     *   <li>Name is required and cannot be null or empty</li>
+     *   <li>Automatically generates slug from name</li>
+     *   <li>Sets creation and modification timestamps automatically</li>
+     * </ul>
+     *
+     * @param request The simple category creation request containing only name. Cannot be null.
+     * @return {@link CategoryDTO} representing the newly created category
+     * @throws BadRequestException if the request data fails validation
+     * @throws DataExistedException if a category with the same name already exists
+     */
+    CategoryDTO createSimple(SimpleCategoryRequest request) throws BadRequestException;
 
     /**
      * Updates an existing category with new information.

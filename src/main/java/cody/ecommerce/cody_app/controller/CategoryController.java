@@ -5,6 +5,7 @@ import cody.ecommerce.cody_app.dto.ResponseData;
 import cody.ecommerce.cody_app.dto.request.category.AssignProductRequest;
 import cody.ecommerce.cody_app.dto.request.category.CreateCategoryRequest;
 import cody.ecommerce.cody_app.dto.request.category.RemoveProductRequest;
+import cody.ecommerce.cody_app.dto.request.category.SimpleCategoryRequest;
 import cody.ecommerce.cody_app.dto.request.category.UpdateCategoryRequest;
 import cody.ecommerce.cody_app.service.CategoryService;
 import cody.ecommerce.cody_app.util.ResponseUtil;
@@ -44,6 +45,11 @@ public class CategoryController {
     @PostMapping("/admin/create")
     public ResponseEntity<ResponseData<CategoryDTO>> createCategory(@RequestBody CreateCategoryRequest request) {
         return ResponseUtil.getResponse(() -> categoryService.create(request), "Category created successfully");
+    }
+
+    @PostMapping("/admin/create-simple")
+    public ResponseEntity<ResponseData<CategoryDTO>> createSimpleCategory(@RequestBody SimpleCategoryRequest request) {
+        return ResponseUtil.getResponse(() -> categoryService.createSimple(request), "Category created successfully");
     }
 
     @PutMapping("/admin/update/{categoryId}")

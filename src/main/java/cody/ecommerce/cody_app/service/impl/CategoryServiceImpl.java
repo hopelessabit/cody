@@ -3,6 +3,7 @@ package cody.ecommerce.cody_app.service.impl;
 import cody.ecommerce.cody_app.dto.CategoryDTO;
 import cody.ecommerce.cody_app.dto.Error;
 import cody.ecommerce.cody_app.dto.request.category.CreateCategoryRequest;
+import cody.ecommerce.cody_app.dto.request.category.SimpleCategoryRequest;
 import cody.ecommerce.cody_app.dto.request.category.UpdateCategoryRequest;
 import cody.ecommerce.cody_app.entity.Category;
 import cody.ecommerce.cody_app.entity.Product;
@@ -74,16 +75,61 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional(rollbackFor = SqlException.class)
+    public CategoryDTO createSimple(SimpleCategoryRequest request) throws BadRequestException {
+        // Validate request data
+        request.validate();
+
+        // Check if category with same name already exists
+        if (categoryRepository.existsByNameIgnoreCaseOrSlugIgnoreCase(request.getName(), generateSlug(request.getName()))) {
+            throw new DataExistedException("Category with this name already exists",
+                    Error.build("name", List.of(request.getName())));
+        }
+
+        // Create category with minimal required fields
+        Category category = Category.builder()
+                .name(request.getName())
+                .slug(generateSlug(request.getName()))
+                .description(request.getName()) // Use name as description by default
+                .metaDescription(request.getName()) // Use name as meta description by default
+                .build();
+
+        Category savedCategory = categoryRepository.save(category);
+        return CategoryDTO.from(savedCategory);
+    }
+
+    /**
+     * Generates a URL-friendly slug from a category name.
+     * Converts to lowercase, replaces spaces with hyphens, and removes special characters.
+     */
+    private String generateSlug(String name) {
+        return name.toLowerCase()
+                .trim()
+                .replaceAll("\\s+", "-")
+                .replaceAll("[^a-z0-9-]", "")
+                .replaceAll("-+", "-")
+                .replaceAll("^-|-$", "");
+    }
+
+    @Override
+    @Transactional(rollbackFor = SqlException.class)
     public CategoryDTO update(String id, UpdateCategoryRequest request) throws BadRequestException {
+        // Validate request data first
+        request.validate();
 
         Category existingCategory = categoryRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Category not found",
                         Error.build("id", List.of(id))));
 
-        // Check if another category with same name exists (excluding current category)
-        if (categoryRepository.existsByNameIgnoreCaseOrSlugIgnoreCase(request.getName(), request.getSlug())) {
-            throw new DataExistedException("Category name already exists",
-                    Error.build("name", List.of(request.getName())));
+        // Check if another category with same name/slug exists (excluding current category)
+        // Only check if name or slug is being updated
+        if ((request.getName() != null || request.getSlug() != null)) {
+            String nameToCheck = request.getName() != null ? request.getName() : existingCategory.getName();
+            String slugToCheck = request.getSlug() != null ? request.getSlug() : existingCategory.getSlug();
+
+            if (categoryRepository.existsByNameIgnoreCaseOrSlugIgnoreCaseAndIdNot(nameToCheck, slugToCheck, id)) {
+                throw new DataExistedException("Category name or slug already exists",
+                        Error.build("name", List.of(nameToCheck)));
+            }
         }
 
         existingCategory.setName(CompareUtil.compare(request.getName(), existingCategory.getName()));
@@ -235,3 +281,4 @@ public class CategoryServiceImpl implements CategoryService {
         };
     }
 }
+
