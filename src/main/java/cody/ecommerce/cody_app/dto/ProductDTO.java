@@ -25,6 +25,7 @@ public class ProductDTO {
     private Integer stockQuantity;
     private Boolean isHidden;
     private List<ProductDTO> products;
+    private Boolean isCombo;
     private List<CategoryDTO> categories;
     private List<ProductImageDTO> images;
 
@@ -46,6 +47,8 @@ public class ProductDTO {
                             .map(ProductDTO::basicList)
                             .toList()
             );
+        } else{
+            productDTO.setIsCombo(false);
         }
         if (product.getCategories() != null) {
             productDTO.setCategories(

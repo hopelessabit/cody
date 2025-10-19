@@ -15,7 +15,9 @@ import cody.ecommerce.cody_app.entity.sub_entity.OrderItem;
 import cody.ecommerce.cody_app.entity.sub_entity.OrderStatus;
 import cody.ecommerce.cody_app.exception.BadRequestException;
 import cody.ecommerce.cody_app.repository.*;
+import cody.ecommerce.cody_app.service.EmployeeKpiService;
 import cody.ecommerce.cody_app.service.OrderService;
+import cody.ecommerce.cody_app.service.KpiService;
 import cody.ecommerce.cody_app.util.SecurityContextHolderUtil;
 import jakarta.persistence.criteria.*;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +42,8 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final OrderItemRepository orderItemRepository;
+    private final KpiService kpiService;
+    private final EmployeeKpiService employeeKpiService;
 
     @Transactional
     public OrderDTO create(CreateOrderRequest request) {
@@ -228,8 +232,15 @@ public class OrderServiceImpl implements OrderService {
         result.setDeliveryStatus(OrderStatusDeliveryEnum.U_CF);
         orderStatusRepository.save(result);
 
+        OrderMainStatusEnum previousStatus = order.getMainStatus();
         order.setMainStatus(OrderMainStatusEnum.CP);
         orderRepository.save(order);
+
+        // Update KPI progress when order is completed
+        if (previousStatus != OrderMainStatusEnum.CP && order.getSellerId() != null) {
+            updateEmployeeKpiProgress(order);
+        }
+
         return null;
     }
 
@@ -255,6 +266,9 @@ public class OrderServiceImpl implements OrderService {
     public void modifyOrderMainStatus(Order order, OrderStatus latestOrderStatus) {
         if (latestOrderStatus == null)
             return;
+
+        OrderMainStatusEnum previousStatus = order.getMainStatus();
+
         if (latestOrderStatus.getDeliveryStatus().equals(OrderStatusDeliveryEnum.DC)) {
             order.setMainStatus(OrderMainStatusEnum.DC);
         } else if (latestOrderStatus.getDeliveryStatus().equals(OrderStatusDeliveryEnum.CNL)) {
@@ -267,6 +281,41 @@ public class OrderServiceImpl implements OrderService {
             order.setMainStatus(OrderMainStatusEnum.RFG);
         } else if (latestOrderStatus.getPaymentStatus().equals(OrderPaymentStatusEnum.RFD)) {
             order.setMainStatus(OrderMainStatusEnum.RFD);
+        }
+
+        // Check if order status changed to CP (Completed) and update KPI
+        if (order.getMainStatus() == OrderMainStatusEnum.CP &&
+            previousStatus != OrderMainStatusEnum.CP &&
+            order.getSellerId() != null) {
+            updateEmployeeKpiProgress(order);
+        }
+    }
+
+    /**
+     * Updates employee KPI progress when an order is completed.
+     * Calculates total product quantity and updates selled progress for the employee.
+     */
+    private void updateEmployeeKpiProgress(Order order) {
+        try {
+            // Calculate total product quantity from order items
+            int totalProductQuantity = order.getOrderItems().stream()
+                    .mapToInt(OrderItem::getQuantity)
+                    .sum();
+
+            // Update KPI progress for the seller
+            kpiService.updateSelledProgressForEmployee(order.getSellerId(), totalProductQuantity);
+
+            // Also update EmployeeKpi stats directly
+            if (employeeKpiService instanceof EmployeeKpiServiceImpl) {
+                ((EmployeeKpiServiceImpl) employeeKpiService).updateStatsAfterKpiChange(order.getSellerId());
+            }
+
+            log.info("Updated KPI progress for employee {} with {} additional sales from order {}",
+                    order.getSellerId(), totalProductQuantity, order.getId());
+        } catch (Exception e) {
+            log.error("Failed to update KPI progress for employee {} from order {}: {}",
+                    order.getSellerId(), order.getId(), e.getMessage(), e);
+            // Don't throw exception to avoid breaking order completion flow
         }
     }
 
@@ -459,7 +508,7 @@ public class OrderServiceImpl implements OrderService {
     public Void markOrderAsPaid(String orderId) {
         Order order = orderRepository.findById(orderId).orElseThrow(() ->
                 new BadRequestException("Order not found", Error.build("Order not found", List.of(orderId))));
-        log.info("isBank: {}, isAdmin: {}", SecurityContextHolderUtil.getRole().isBank(), SecurityContextHolderUtil.getRole().isAdmin());
+        log.info("isBank: {}, isAdmin: {}", SecurityContextHolderUtil.getRole().isAdmin(), SecurityContextHolderUtil.getRole().isAdmin());
         if (!SecurityContextHolderUtil.getRole().isBank() && !SecurityContextHolderUtil.getRole().isAdmin()) {
             throw new BadRequestException("Unauthorized", Error.build("You are not authorized to mark this order as paid"));
         }

@@ -23,6 +23,11 @@ import java.util.List;
 @AllArgsConstructor
 public class OrderDTO {
     private String orderId;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String comboName;
+    private String note;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Boolean isCombo;
     private List<OrderItemDTO> items;
     private String addressUrl;
     private List<OrderStatusDTO> orderStatuses;

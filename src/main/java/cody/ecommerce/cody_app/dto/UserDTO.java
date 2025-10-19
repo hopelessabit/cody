@@ -1,5 +1,6 @@
 package cody.ecommerce.cody_app.dto;
 
+import cody.ecommerce.cody_app.constant.Role;
 import cody.ecommerce.cody_app.entity.User;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
@@ -25,6 +26,7 @@ public class UserDTO {
     private LocalDateTime createdAt;
     private String buyerPhone;
     private String addressUrl;
+    private EmployeeKpiDTO employeeKpi;
 
     public static UserDTO fromBasic(User user) {
         if (user == null) return null;
@@ -32,6 +34,10 @@ public class UserDTO {
         dto.setId(user.getId());
         dto.setName(user.getName());
         return dto;
+    }
+
+    public static UserDTO basicFrom(User user) {
+        return fromBasic(user);
     }
 
     public static UserDTO fromBasic(User user, String buyerPhone) {
@@ -52,6 +58,12 @@ public class UserDTO {
         dto.setAddressUrl(user.getAddressUrl());
         dto.setRole(user.getRole().getFullName());
         dto.setCreatedAt(user.getCreatedAt());
+
+        // Add EmployeeKpi data if user is an employee
+        if (user.getRole() == Role.EP && user.getEmployeeKpi() != null) {
+            dto.setEmployeeKpi(EmployeeKpiDTO.fromEntity(user.getEmployeeKpi()));
+        }
+
         return dto;
     }
 }

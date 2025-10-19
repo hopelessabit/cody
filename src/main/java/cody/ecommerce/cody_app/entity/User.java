@@ -42,6 +42,9 @@ public class User extends BaseEntity implements UserDetails {
     @OneToMany(mappedBy = "assignTo", fetch = FetchType.LAZY)
     private Set<EmployeeTask> employeeTasks;
 
+    @OneToOne(mappedBy = "employee", fetch = FetchType.LAZY)
+    private EmployeeKpi employeeKpi;
+
     @Override
     @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -134,6 +137,14 @@ public class User extends BaseEntity implements UserDetails {
 
     public void setEmployeeTasks(Set<EmployeeTask> employeeTasks) {
         this.employeeTasks = employeeTasks;
+    }
+
+    public EmployeeKpi getEmployeeKpi() {
+        return employeeKpi;
+    }
+
+    public void setEmployeeKpi(EmployeeKpi employeeKpi) {
+        this.employeeKpi = employeeKpi;
     }
 
     public String getAddressUrl() {

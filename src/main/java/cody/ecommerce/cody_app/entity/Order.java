@@ -60,6 +60,15 @@ public class Order extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private OrderMainStatusEnum mainStatus;
 
+    @Column(name = "note", length = 1000)
+    private String note;
+
+    @Column(name = "isCombo")
+    private Boolean isCombo;
+
+    @Column(name = "custom_combo_name", length = 255)
+    private String customComboName;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     LocalDateTime createdAt;
@@ -78,6 +87,9 @@ public class Order extends BaseEntity {
         order.setBuyerName(request.getBuyerName());
         order.setBuyerPhone(request.getBuyerPhone());
         order.setAddressUrl(request.getAddressUrl());
+        order.setNote(request.getNote());
+        order.setIsCombo(request.getIsCombo());
+        order.setCustomComboName(request.getCustomComboName());
         return order;
     }
 

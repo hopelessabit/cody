@@ -2,6 +2,7 @@ package cody.ecommerce.cody_app.dto.request.order;
 
 import cody.ecommerce.cody_app.constant.PaymentMethodEnum;
 import cody.ecommerce.cody_app.dto.Error;
+import cody.ecommerce.cody_app.dto.request.product.CreateProductImageDTO;
 import cody.ecommerce.cody_app.exception.BadRequestException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,7 +22,9 @@ public class CreateOrderRequest {
     private String buyerName;
     private String buyerPhone;
     private String addressUrl;
+    private String customComboName;
     private String note;
+    private Boolean isCombo;
     private PaymentMethodEnum paymentMethod;
     private String sellerId;
 
@@ -44,6 +47,12 @@ public class CreateOrderRequest {
         }
         if (!errors.isEmpty()) {
             throw new BadRequestException("Bad request", Error.build("Invalid order request", errors));
+        }
+        if (isCombo == null) {
+            isCombo = false;
+        }
+        if (customComboName == null || customComboName.isEmpty()) {
+            customComboName = null;
         }
         addressUrl = addressUrl.trim();
         note = note != null ? note.trim() : null;

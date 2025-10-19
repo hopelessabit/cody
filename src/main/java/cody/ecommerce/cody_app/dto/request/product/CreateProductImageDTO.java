@@ -8,6 +8,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class CreateProductImageDTO {
+    private String imageId;
     private String imageUrl;
     private Boolean isMain;
 }
