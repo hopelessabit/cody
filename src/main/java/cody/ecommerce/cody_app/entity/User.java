@@ -29,6 +29,9 @@ public class User extends BaseEntity implements UserDetails {
     @Column(name = "name", length = 100)
     private String name;
 
+    @Column(name="address_url", length = 500)
+    private  String addressUrl;
+
     @Column(name = "role", length = 10)
     @Enumerated(EnumType.STRING)
     private Role role;
@@ -133,12 +136,23 @@ public class User extends BaseEntity implements UserDetails {
         this.employeeTasks = employeeTasks;
     }
 
+    public String getAddressUrl() {
+        return addressUrl;
+    }
+
+    public void setAddressUrl(String addressUrl) {
+        this.addressUrl = addressUrl;
+    }
+
     public static User initUser(RegisterRequestDTO requestDTO) {
         User user = new User();
         user.setEmail(requestDTO.getEmail());
         user.setName(requestDTO.getLastName() + " " + requestDTO.getFirstName());
         user.setPassword(requestDTO.getPassword());
-        user.setRole(Role.US); // Default role, can be changed based on your logic
+        user.setRole(Role.US); // Default role
+        if (requestDTO.getAddressUrl() != null) {
+            user.setAddressUrl(requestDTO.getAddressUrl());
+        }
         user.setCreatedAt(LocalDateTime.now());
         return user;
     }
@@ -148,7 +162,10 @@ public class User extends BaseEntity implements UserDetails {
         user.setEmail(requestDTO.getEmail());
         user.setName(requestDTO.getLastName() + " " + requestDTO.getFirstName());
         user.setPassword(requestDTO.getPassword());
-        user.setRole(role); // Default role, can be changed based on your logic
+        user.setRole(role);
+        if (requestDTO.getAddressUrl() != null) {
+            user.setAddressUrl(requestDTO.getAddressUrl());
+        }
         user.setCreatedAt(LocalDateTime.now());
         return user;
     }

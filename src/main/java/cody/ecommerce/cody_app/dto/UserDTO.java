@@ -24,6 +24,7 @@ public class UserDTO {
     private String role;
     private LocalDateTime createdAt;
     private String buyerPhone;
+    private String addressUrl;
 
     public static UserDTO fromBasic(User user) {
         if (user == null) return null;
@@ -48,6 +49,7 @@ public class UserDTO {
         dto.setId(user.getId());
         dto.setName(user.getName());
         dto.setEmail(user.getEmail());
+        dto.setAddressUrl(user.getAddressUrl());
         dto.setRole(user.getRole().getFullName());
         dto.setCreatedAt(user.getCreatedAt());
         return dto;

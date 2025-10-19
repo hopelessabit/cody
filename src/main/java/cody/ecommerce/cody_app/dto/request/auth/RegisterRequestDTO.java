@@ -11,6 +11,7 @@ public class RegisterRequestDTO {
     private String email;
     private String password;
     private String confirmPassword;
+    private String addressUrl;
 
     public String getFirstName() {
         return firstName;
@@ -30,6 +31,10 @@ public class RegisterRequestDTO {
 
     public String getConfirmPassword() {
         return confirmPassword;
+    }
+
+    public String getAddressUrl() {
+        return addressUrl;
     }
 
     public Error<?> validate() {

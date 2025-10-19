@@ -40,9 +40,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public LoginResponseDTO loginAccount(LoginRequestDTO request) throws NotFoundException, InternalServerErrorException {
         String accessToken;
         String refreshToken;
+        var account = userRepository.findFirstByEmail(request.getEmail())
+                .orElseThrow(() -> new NotFoundException(AuthenticationMessage.FAILED, Error.build("Người dùng không tồn tại")));
         try {
-            var account = userRepository.findFirstByEmail(request.getEmail())
-                    .orElseThrow(() -> new NotFoundException("Người dùng không tồn tại"));
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword(), List.of(new SimpleGrantedAuthority(account.getRole().getFullName()))));
             accessToken = jwtService.generateToken(account);
             refreshToken = jwtService.generateRefreshToken(account);
@@ -53,7 +53,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new InternalServerErrorException(AuthenticationMessage.FAILED, Error.build(ex.getMessage()));
         }
 
-        return new LoginResponseDTO(accessToken, refreshToken);
+        return new LoginResponseDTO(accessToken, refreshToken, account);
     }
 
     public LoginResponseDTO makeRefreshToken(RefreshTokenRequestDTO request){
@@ -68,7 +68,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .orElseThrow(() -> new NotFoundException("Người dùng không tồn tại"));
         String accessToken = jwtService.generateToken(user);
 
-        return new LoginResponseDTO(accessToken, null);
+        return new LoginResponseDTO(accessToken, null, user);
     }
 
     @Override
@@ -116,9 +116,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public LoginResponseDTO adminLogin(LoginRequestDTO request) {
         String accessToken;
         String refreshToken;
+        var account = userRepository.findFirstByEmail(request.getEmail())
+                .orElseThrow(() -> new NotFoundException(AuthenticationMessage.FAILED, Error.build("Người dùng không tồn tại")));
         try {
-            var account = userRepository.findFirstByEmail(request.getEmail())
-                    .orElseThrow(() -> new NotFoundException("Người dùng không tồn tại"));
             if (!account.getRole().isAdmin() && !account.getRole().isManager()) {
                 throw new BadRequestException("Người dùng không có quyền truy cập");
             }
@@ -131,7 +131,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         } catch (Exception ex) {
             throw new InternalServerErrorException(AuthenticationMessage.FAILED, Error.build(ex.getMessage()));
         }
-        return LoginResponseDTO.of(accessToken, refreshToken);
+        return LoginResponseDTO.of(accessToken, refreshToken, account);
     }
 
     @Override
@@ -168,9 +168,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public LoginResponseDTO employeeLogin(LoginRequestDTO request) {
         String accessToken;
         String refreshToken;
+        var account = userRepository.findFirstByEmail(request.getEmail())
+                .orElseThrow(() -> new NotFoundException(AuthenticationMessage.FAILED, Error.build("Người dùng không tồn tại")));
         try {
-            var account = userRepository.findFirstByEmail(request.getEmail())
-                    .orElseThrow(() -> new NotFoundException("Người dùng không tồn tại"));
             if (!account.getRole().isEmployee()) {
                 throw new BadRequestException("Người dùng không có quyền truy cập");
             }
@@ -183,7 +183,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         } catch (Exception ex) {
             throw new InternalServerErrorException(AuthenticationMessage.FAILED, Error.build(ex.getMessage()));
         }
-        return LoginResponseDTO.of(accessToken, refreshToken);
+        return LoginResponseDTO.of(accessToken, refreshToken, account  );
     }
 
     private void saveToken(User account, String refreshToken) {
