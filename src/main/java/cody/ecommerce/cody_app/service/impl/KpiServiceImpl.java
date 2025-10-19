@@ -161,6 +161,8 @@ public class KpiServiceImpl implements KpiService {
 
     @Override
     @Transactional
+    @Deprecated
+    @SuppressWarnings("deprecation")
     public KpiDTO updateProgress(String kpiId, Integer currentProgress) throws NotFoundException, BadRequestException {
         throw new BadRequestException("Use updateInputProgress or updateSelledProgress instead");
     }

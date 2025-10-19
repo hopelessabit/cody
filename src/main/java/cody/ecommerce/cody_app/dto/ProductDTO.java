@@ -40,6 +40,7 @@ public class ProductDTO {
         productDTO.setOriginalPrice(product.getOriginalPrice());
         productDTO.setStockQuantity(product.getStockQuantity());
         productDTO.setIsHidden(product.getIsHidden());
+        productDTO.setIsCombo(product.getIsCombo());
         if (product.getIncludedProducts() != null) {
             productDTO.setProducts(
                     product.getIncludedProducts().stream()
@@ -47,8 +48,6 @@ public class ProductDTO {
                             .map(ProductDTO::basicList)
                             .toList()
             );
-        } else{
-            productDTO.setIsCombo(false);
         }
         if (product.getCategories() != null) {
             productDTO.setCategories(
@@ -72,6 +71,7 @@ public class ProductDTO {
         productDTO.setId(product.getId());
         productDTO.setName(product.getName());
         productDTO.setSlug(product.getSlug());
+        productDTO.setIsCombo(product.getIsCombo());
         return productDTO;
     }
 
@@ -81,6 +81,7 @@ public class ProductDTO {
         dto.setName(product.getName());
         dto.setMetaDescription(product.getMetaDescription());
         dto.setSlug(product.getSlug());
+        dto.setIsCombo(product.getIsCombo());
         if (product.getIncludedProducts() != null) {
             dto.setProducts(
                     product.getIncludedProducts().stream()
@@ -119,6 +120,7 @@ public class ProductDTO {
         dto.setOriginalPrice(product.getOriginalPrice());
         dto.setStockQuantity(product.getStockQuantity());
         dto.setSlug(product.getSlug());
+        dto.setIsCombo(product.getIsCombo());
         if (product.getIncludedProducts() != null) {
             dto.setProducts(
                     product.getIncludedProducts().stream()

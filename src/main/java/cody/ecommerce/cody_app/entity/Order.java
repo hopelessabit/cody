@@ -63,7 +63,8 @@ public class Order extends BaseEntity {
     @Column(name = "note", length = 1000)
     private String note;
 
-    @Column(name = "isCombo")
+    //TODO: change nullalbe to True
+    @Column(name = "isCombo", nullable = false, columnDefinition = "BIT DEFAULT 0")
     private Boolean isCombo;
 
     @Column(name = "custom_combo_name", length = 255)

@@ -158,4 +158,23 @@ public interface ProductService {
      */
     Page<ProductDTO> searchProducts(String keyword, String categoryId, int page, int size,
                                     String sortBy, String sortDirection, boolean forStaff);
+
+    /**
+     * Adds quantity to an existing product's stock.
+     * <p>
+     * <b>Behavior:</b>
+     * <ul>
+     *   <li>Fetches the product by ID; throws {@link NotFoundException} if not found.</li>
+     *   <li>Validates that the amount is positive.</li>
+     *   <li>Adds the specified amount to the current stock quantity.</li>
+     *   <li>Returns the updated product as a {@link ProductDTO}.</li>
+     * </ul>
+     *
+     * @param productId the unique ID of the product to update
+     * @param amount the positive amount to add to the stock quantity
+     * @return the updated {@link ProductDTO} with new stock quantity
+     * @throws NotFoundException if the product is not found
+     * @throws BadRequestException if the amount is invalid
+     */
+    ProductDTO addQuantity(String productId, Integer amount);
 }

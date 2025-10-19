@@ -82,7 +82,6 @@ public class ProductServiceImpl implements ProductService {
         if (error != null && error.hasErrors()) {
             throw new BadRequestException("Thông tin tạo sản phẩm không hợp lệ", error);
         }
-        List<Category> categories = categoryService.getCategoryById(request.getCategoryIds());
 
         List<Product> productIncludeds = new ArrayList<>();
         Map<String, String> errors = new HashMap<>();
@@ -98,13 +97,11 @@ public class ProductServiceImpl implements ProductService {
             throw new BadRequestException("Thông tin tạo sản phẩm không hợp lệ", Error.build("Thông tin đã tồn tại", errors));
         }
 
-        Product product = new Product();
-        product.set(request);
+        boolean isCombo = request.getIncludedIds() != null && !request.getIncludedIds().isEmpty();
+        List<Category> categories = new ArrayList<>();
 
-        // Set categories and images if needed (requires additional logic)
-        Product savedProduct = productRepository.save(product);
-
-        if (request.getIncludedIds() != null && !request.getIncludedIds().isEmpty()) {
+        if (isCombo) {
+            // For combo products, validate included products and get categories from them
             productIncludeds = productRepository.findAllById(request.getIncludedIds());
             if (productIncludeds.size() != request.getIncludedIds().size()) {
                 Set<String> foundIds = productIncludeds.stream().map(Product::getId).collect(Collectors.toSet());
@@ -114,26 +111,140 @@ public class ProductServiceImpl implements ProductService {
                 throw new NotFoundException("Một số sản phẩm được bao gồm theo không tồn tại.", Error.build("included_ids", notFoundIds));
             }
 
-            List<ProductIncluded> productIncludedList = productIncludeds.stream()
-                    .map(includedProduct -> {
-                        return ProductIncluded.from(product.getId(), includedProduct.getId());
-                    }).toList();
-            productIncludedRepository.saveAll(productIncludedList);
-            product.setIncludedProducts(productIncludedList);
+            // Validate that all included products have the same category
+            categories = validateAndGetComboCategories(productIncludeds);
+        } else {
+            // For regular products, use provided category IDs
+            if (request.getCategoryIds() == null || request.getCategoryIds().isEmpty()) {
+                throw new BadRequestException("Thông tin tạo sản phẩm không hợp lệ",
+                    Error.build("categoryIds", Map.of("categoryIds", "Category IDs are required for non-combo products")));
+            }
+            categories = categoryService.getCategoryById(request.getCategoryIds());
         }
 
-        List<ProductCategory> productCategories = request.getCategoryIds().stream()
-                .map(categoryId -> {
-                    return ProductCategory.of(savedProduct.getId(), categoryId);
-                }).toList();
-        savedProduct.setCategories(new HashSet<>(categories));
+        // Create and save the product first
+        Product product = new Product();
+        product.set(request);
+        product.setIsCombo(isCombo);
+        product.setCategories(new HashSet<>(categories));
 
-        addImage(savedProduct, request.getImages());
+        Product savedProduct = productRepository.save(product);
 
-        addIngredients(product, request.getIngredients());
+        // Handle combo products
+        if (isCombo) {
+            List<ProductIncluded> productIncludedList = productIncludeds.stream()
+                    .map(includedProduct -> ProductIncluded.from(savedProduct.getId(), includedProduct.getId()))
+                    .toList();
+            productIncludedRepository.saveAll(productIncludedList);
+            // Don't set the relationship on the entity to avoid circular references and entity conflicts
+        }
 
-        Product result= productRepository.save(savedProduct);
+        // Categories are already saved through the @ManyToMany relationship when saving the product
+        // No need to manually save ProductCategory relationships here
+
+        // Handle images within transaction
+        createProductImages(savedProduct, request.getImages());
+
+        // Handle ingredients within transaction
+        createProductIngredients(savedProduct, request.getIngredients());
+
+        // Final save to update all relationships - no circular references now
+        Product result = productRepository.save(savedProduct);
+
+        // For combo products, fetch fresh entity with relationships loaded
+        if (isCombo) {
+            // Get fresh entity from database with all relationships properly loaded
+            result = productRepository.findById(result.getId()).orElse(result);
+        }
+
         return ProductDTO.from(result);
+    }
+
+    /**
+     * Creates product images within the same transaction
+     */
+    private void createProductImages(Product product, Set<CreateProductImageDTO> images) {
+        if (images == null || images.isEmpty()) {
+            return;
+        }
+
+        List<ProductImage> productImages = images.stream()
+                .map(image -> {
+                    ProductImage productImage = new ProductImage();
+                    productImage.setProductId(product.getId());
+                    productImage.setImageUrl(image.getImageUrl());
+                    productImage.setIsMain(image.getIsMain());
+                    return productImage;
+                }).toList();
+
+        productImageRepository.saveAll(productImages);
+    }
+
+    /**
+     * Creates product ingredients within the same transaction
+     */
+    private void createProductIngredients(Product product, List<ProductIngredientRequest> ingredientRequests) {
+        if (ingredientRequests == null || ingredientRequests.isEmpty()) {
+            return;
+        }
+
+        Set<ProductIngredient> productIngredients = new HashSet<>();
+        for (ProductIngredientRequest ingReq : ingredientRequests) {
+            Ingredient ingredient = findOrCreateIngredient(ingReq);
+            if (ingredient == null) {
+                throw new BadRequestException("Thông tin nguyên liệu không hợp lệ", Error.build("Nguyên liệu không tồn tại"));
+            }
+
+            ProductIngredient pi = new ProductIngredient();
+            pi.setId(new ProductIngredientId(product.getId(), ingredient.getId()));
+            pi.setProduct(product);
+            pi.setIngredient(ingredient);
+            productIngredients.add(pi);
+        }
+        product.setProductIngredients(productIngredients);
+    }
+
+    /**
+     * Validates that all included products have the same category and returns the category list
+     */
+    private List<Category> validateAndGetComboCategories(List<Product> includedProducts) {
+        if (includedProducts == null || includedProducts.isEmpty()) {
+            throw new BadRequestException("Combo product must include at least one product",
+                Error.build("includedIds", Map.of("includedIds", "Included products are required for combo")));
+        }
+
+        // Get all categories from all included products
+        Set<String> allCategoryIds = new HashSet<>();
+        for (Product product : includedProducts) {
+            Set<String> productCategoryIds = product.getCategories().stream()
+                    .map(Category::getId)
+                    .collect(Collectors.toSet());
+            allCategoryIds.addAll(productCategoryIds);
+        }
+
+        // Check if all products share at least one common category
+        Set<String> commonCategoryIds = null;
+        for (Product product : includedProducts) {
+            Set<String> productCategoryIds = product.getCategories().stream()
+                    .map(Category::getId)
+                    .collect(Collectors.toSet());
+
+            if (commonCategoryIds == null) {
+                commonCategoryIds = new HashSet<>(productCategoryIds);
+            } else {
+                commonCategoryIds.retainAll(productCategoryIds);
+            }
+        }
+
+        if (commonCategoryIds == null || commonCategoryIds.isEmpty()) {
+            throw new BadRequestException("Tất cả sản phẩm trong combo phải cùng danh mục",
+                Error.build("includedIds", Map.of("category", "All included products must have at least one common category")));
+        }
+
+        // Return the first common category (you can modify this logic if needed)
+        String selectedCategoryId = commonCategoryIds.iterator().next();
+        Category selectedCategory = categoryService.getCategoryById(Set.of(selectedCategoryId)).get(0);
+        return List.of(selectedCategory);
     }
 
     public void addImage(Product product, Set<CreateProductImageDTO> images) {
@@ -150,9 +261,21 @@ public class ProductServiceImpl implements ProductService {
                 }).toList();
 
         List<ProductImage> savedImages = productImageRepository.saveAll(productImages);
+
+        // Create a new mutable list to avoid immutable list issues
         List<ProductImage> currentImages = product.getImages();
-        currentImages.addAll(savedImages);
-        product.setImages(currentImages);
+        List<ProductImage> updatedImages = new ArrayList<>();
+
+        // Add existing images if any
+        if (currentImages != null && !currentImages.isEmpty()) {
+            updatedImages.addAll(currentImages);
+        }
+
+        // Add new saved images
+        updatedImages.addAll(savedImages);
+
+        // Set the updated images list
+        product.setImages(updatedImages);
         productRepository.save(product);
     }
 
@@ -532,7 +655,7 @@ public class ProductServiceImpl implements ProductService {
 
             if (!forStaff) {
                 addIsHiddenPredicate(cb, root, predicates);
-                notIncludeProductHaveComboImage(cb, root, predicates);
+//                notIncludeProductHaveComboImage(cb, root, predicates);
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
@@ -566,5 +689,25 @@ public class ProductServiceImpl implements ProductService {
     private void notIncludeProductHaveComboImage(CriteriaBuilder cb, Root<Product> root, List<Predicate> predicates) {
         predicates.add(cb.isNull(root.get("comboImage")));
     }
-}
 
+    @Override
+    @Transactional
+    public ProductDTO addQuantity(String productId, Integer amount) {
+        // Validate input
+        if (amount == null || amount <= 0) {
+            throw new BadRequestException("Invalid amount", Error.build("amount", List.of("Amount must be greater than 0")));
+        }
+
+        // Find the product
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new NotFoundException("Product not found", Error.build("productId", List.of(productId))));
+
+        // Add quantity to current stock
+        Integer currentStock = product.getStockQuantity() != null ? product.getStockQuantity() : 0;
+        product.setStockQuantity(currentStock + amount);
+
+        // Save and return updated product
+        Product updatedProduct = productRepository.save(product);
+        return ProductDTO.basicDetail(updatedProduct);
+    }
+}

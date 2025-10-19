@@ -3,10 +3,10 @@ package cody.ecommerce.cody_app.service.impl;
 import cody.ecommerce.cody_app.constant.OrderMainStatusEnum;
 import cody.ecommerce.cody_app.constant.OrderPaymentStatusEnum;
 import cody.ecommerce.cody_app.constant.OrderStatusDeliveryEnum;
+import cody.ecommerce.cody_app.entity.Category;
 import cody.ecommerce.cody_app.constant.PaymentMethodEnum;
 import cody.ecommerce.cody_app.dto.Error;
 import cody.ecommerce.cody_app.dto.OrderDTO;
-import cody.ecommerce.cody_app.dto.StatusDTO;
 import cody.ecommerce.cody_app.dto.request.order.*;
 import cody.ecommerce.cody_app.entity.Order;
 import cody.ecommerce.cody_app.entity.Product;
@@ -28,7 +28,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -50,34 +49,84 @@ public class OrderServiceImpl implements OrderService {
         User buyer = SecurityContextHolderUtil.getAccount();
         // validate request
         request.validate();
+
         // 1. Check each product exists
         List<String> requestProductIds = request.getItems().stream()
                 .map(CreateOrderItemRequest::getProductId)
                 .toList();
         List<Product> products = productRepository.findAllById(requestProductIds);
+
+        // Fix: Properly check for missing products
         if (products.size() != request.getItems().size()) {
-            List<String> missingProductIds = new ArrayList<>();
-            requestProductIds.forEach(itemId -> {
-                if (!requestProductIds.contains(itemId)) {
-                    missingProductIds.add(itemId);
-                }
-            });
+            List<String> foundProductIds = products.stream().map(Product::getId).toList();
+            List<String> missingProductIds = requestProductIds.stream()
+                    .filter(id -> !foundProductIds.contains(id))
+                    .toList();
+
             if (!missingProductIds.isEmpty()) {
                 throw new BadRequestException("Bad request", Error.build("Products not found", missingProductIds));
             }
         }
+
+        // 2. Check all products have the same category (if multiple products)
+        if (products.size() > 1) {
+            // Get first product's categories
+            Set<String> firstProductCategoryIds = products.get(0).getCategories().stream()
+                    .map(Category::getId)
+                    .collect(java.util.stream.Collectors.toSet());
+
+            // Check if all products share at least one common category
+            boolean allHaveCommonCategory = products.stream().allMatch(product -> {
+                Set<String> productCategoryIds = product.getCategories().stream()
+                        .map(Category::getId)
+                        .collect(java.util.stream.Collectors.toSet());
+                // Check if there's any intersection between categories
+                return productCategoryIds.stream().anyMatch(firstProductCategoryIds::contains);
+            });
+
+            if (!allHaveCommonCategory) {
+                Map<String, String> categoryErrors = new HashMap<>();
+                categoryErrors.put("category", "All products in an order must share at least one common category");
+                throw new BadRequestException("Bad request", Error.build("Category mismatch", categoryErrors));
+            }
+        }
+
         Map<String, String> errors = new HashMap<>();
         // Process order creation
         Order order = Order.from(request);
+
+        // Set isCombo to true if:
+        // 1. User chose multiple products, OR
+        // 2. User chose a single product that is itself a combo (isCombo = true)
+        boolean orderIsCombo = false;
+
+        if (products.size() > 1) {
+            // Multiple products selected
+            orderIsCombo = true;
+        } else if (products.size() == 1) {
+            // Single product selected - check if it's a combo product
+            Product singleProduct = products.get(0);
+            if (singleProduct.getIsCombo() != null && singleProduct.getIsCombo()) {
+                orderIsCombo = true;
+            }
+        }
+
+        order.setIsCombo(orderIsCombo);
+
         List<OrderItem> orderItems = request.getItems().stream()
                 .map(item -> {
-                    Product product = products.stream().filter(product1 -> product1.getId().equals(item.getProductId())).findAny().orElseThrow(() -> new BadRequestException("Product not found"));
+                    Product product = products.stream()
+                            .filter(p -> p.getId().equals(item.getProductId()))
+                            .findFirst()
+                            .orElseThrow(() -> new BadRequestException("Product not found"));
+
                     if (product.getStockQuantity() < item.getQuantity()) {
-                        errors.put("productId", "Not enough stock for product: " + product.getId());
+                        errors.put("productId_" + product.getId(), "Not enough stock for product: " + product.getId());
                     }
                     product.setStockQuantity(product.getStockQuantity() - item.getQuantity()); // Update stock
                     return OrderItem.from(order.getId(), product, item);
                 }).toList();
+
         if (!errors.isEmpty()) {
             throw new BadRequestException("Bad request", Error.build("Not enough items", errors));
         }

@@ -43,6 +43,9 @@ public class OrderDTO {
 
     public static OrderDTO from(Order order) {
         OrderDTO orderDTO = new OrderDTO();
+        orderDTO.setNote(order.getNote());
+        orderDTO.setIsCombo(order.getIsCombo());
+        orderDTO.setComboName(order.getCustomComboName());
         orderDTO.setOrderId(order.getId());
         orderDTO.setItems(order.getOrderItems().stream().map(OrderItemDTO::from).toList());
         orderDTO.setSeller(UserDTO.fromBasic(order.getSeller()));

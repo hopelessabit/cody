@@ -52,8 +52,11 @@ public class Product extends BaseEntity{
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "is_hidden", nullable = false, columnDefinition = "BIT DEFAULT 0")
-    private Boolean isHidden = true;
+    @Column(name = "is_hidden", nullable = false, columnDefinition = "BIT DEFAULT 1")
+    private Boolean isHidden = false;
+
+    @Column(name = "is_combo", nullable = true)
+    private Boolean isCombo = false;
 
     @UpdateTimestamp
     @Column(name = "updated_at")

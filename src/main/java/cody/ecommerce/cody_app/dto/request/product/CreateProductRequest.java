@@ -29,7 +29,7 @@ public class CreateProductRequest {
     private Set<CreateProductImageDTO> images;
     private List<ProductIngredientRequest> ingredients;
     private String comboImage;
-    private Boolean isHidden = true;
+    private Boolean isHidden = false;
 
     public Error<String> validate() {
         Map<String, String> errors = new HashMap<>();

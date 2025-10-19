@@ -2,6 +2,7 @@ package cody.ecommerce.cody_app.controller;
 
 import cody.ecommerce.cody_app.dto.ProductDTO;
 import cody.ecommerce.cody_app.dto.ResponseData;
+import cody.ecommerce.cody_app.dto.request.product.AddQuantityRequest;
 import cody.ecommerce.cody_app.dto.request.product.CreateProductRequest;
 import cody.ecommerce.cody_app.dto.request.product.UpdateProductRequest;
 import cody.ecommerce.cody_app.service.ProductService;
@@ -75,5 +76,13 @@ public class ProductController {
     @DeleteMapping("/admin/delete/{id}")
     public ResponseEntity<ResponseData<Void>> deleteProduct(@PathVariable String id) {
         return ResponseUtil.getResponse(() -> productService.delete(id), "Product deleted successfully");
+    }
+
+    @PutMapping("/admin/add-quantity/{productId}")
+    public ResponseEntity<ResponseData<ProductDTO>> addQuantityToProduct(
+            @PathVariable String productId,
+            @RequestBody @Validated AddQuantityRequest request) {
+        return ResponseUtil.getResponse(() -> productService.addQuantity(productId, request.getAmount()),
+                "Product quantity updated successfully");
     }
 }
