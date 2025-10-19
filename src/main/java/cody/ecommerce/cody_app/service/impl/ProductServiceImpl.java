@@ -213,38 +213,77 @@ public class ProductServiceImpl implements ProductService {
         updateProductImage(product, request.getImage());
 
         updateProductIncludedImage(product, request.getIncludedProduct());
-        // Remove all existing ingredients
-        product.getProductIngredients().clear();
-        Set<ProductIngredient> productIngredients = new HashSet<>();
-        if (request.getIngredients() != null) {
-            for (ProductIngredientRequest ingReq : request.getIngredients()) {
-                Ingredient ingredient = null;
-                if (ingReq.getId() != null && !ingReq.getId().isBlank()) {
-                    ingredient = ingredientRepository.findById(ingReq.getId()).orElse(null);
-                }
-                if (ingredient == null && ingReq.getName() != null && !ingReq.getName().isBlank()) {
-                    ingredient = ingredientRepository.findAll().stream()
-                        .filter(i -> i.getName().equalsIgnoreCase(ingReq.getName()))
-                        .findFirst().orElse(null);
-                    if (ingredient == null) {
-                        ingredient = new Ingredient();
-                        ingredient.setName(ingReq.getName());
-                        ingredient = ingredientRepository.save(ingredient);
-                    }
-                }
+
+        // Update ProductIngredients: Remove all existing, then add new ones
+        updateProductIngredients(product, request.getIngredients());
+
+        // Save the product with updated ingredients
+        Product finalProduct = productRepository.save(product);
+        return ProductDTO.from(finalProduct);
+    }
+
+    /**
+     * Updates product ingredients by removing all existing ones and adding new ones
+     */
+    private void updateProductIngredients(Product product, List<ProductIngredientRequest> ingredientRequests) {
+        // Step 1: Remove all existing ProductIngredients from database
+        if (product.getProductIngredients() != null && !product.getProductIngredients().isEmpty()) {
+            // Clear the collection first to break the relationship
+            product.getProductIngredients().clear();
+            // Save to persist the removal
+            productRepository.save(product);
+        }
+
+        // Step 2: Add all new ingredients
+        if (ingredientRequests != null && !ingredientRequests.isEmpty()) {
+            Set<ProductIngredient> newProductIngredients = new HashSet<>();
+
+            for (ProductIngredientRequest ingReq : ingredientRequests) {
+                Ingredient ingredient = findOrCreateIngredient(ingReq);
+
                 if (ingredient != null) {
                     ProductIngredient pi = new ProductIngredient();
                     pi.setId(new ProductIngredientId(product.getId(), ingredient.getId()));
                     pi.setProduct(product);
                     pi.setIngredient(ingredient);
-                    productIngredients.add(pi);
+                    newProductIngredients.add(pi);
                 } else {
-                    throw new BadRequestException("Thông tin nguyên liệu không hợp lệ", Error.build("Nguyên liệu không tồn tại"));
+                    throw new BadRequestException("Thông tin nguyên liệu không hợp lệ",
+                        Error.build("Nguyên liệu không tồn tại"));
                 }
             }
+
+            // Set the new ingredients collection
+            product.setProductIngredients(newProductIngredients);
         }
-        product.setProductIngredients(productIngredients);
-        return null;
+    }
+
+    /**
+     * Finds an existing ingredient or creates a new one based on the request
+     */
+    private Ingredient findOrCreateIngredient(ProductIngredientRequest ingReq) {
+        Ingredient ingredient = null;
+
+        // First try to find by ID
+        if (ingReq.getId() != null && !ingReq.getId().isBlank()) {
+            ingredient = ingredientRepository.findById(ingReq.getId()).orElse(null);
+        }
+
+        // If not found by ID, try to find by name
+        if (ingredient == null && ingReq.getName() != null && !ingReq.getName().isBlank()) {
+            ingredient = ingredientRepository.findAll().stream()
+                .filter(i -> i.getName().equalsIgnoreCase(ingReq.getName()))
+                .findFirst().orElse(null);
+
+            // If still not found, create new ingredient
+            if (ingredient == null) {
+                ingredient = new Ingredient();
+                ingredient.setName(ingReq.getName());
+                ingredient = ingredientRepository.save(ingredient);
+            }
+        }
+
+        return ingredient;
     }
 
     private void updateProductIncludedImage(Product product, List<UpdateProductIncludedRequest> requests) {
