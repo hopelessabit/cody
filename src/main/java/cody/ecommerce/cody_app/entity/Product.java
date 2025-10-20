@@ -101,6 +101,5 @@ public class Product extends BaseEntity{
         this.setOriginalPrice(request.getOriginalPrice());
         this.setStockQuantity(request.getStockQuantity());
         this.setIsHidden(request.getIsHidden() == null || request.getIsHidden());
-        this.setComboImage(request.getComboImage() == null || request.getComboImage().isEmpty() ? null : request.getComboImage());
     }
 }

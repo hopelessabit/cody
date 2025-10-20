@@ -28,7 +28,6 @@ public class CreateProductRequest {
     private Set<String> categoryIds;
     private Set<CreateProductImageDTO> images;
     private List<ProductIngredientRequest> ingredients;
-    private String comboImage;
     private Boolean isHidden = false;
 
     public Error<String> validate() {

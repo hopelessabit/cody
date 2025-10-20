@@ -24,7 +24,7 @@ import java.util.List;
 public class OrderDTO {
     private String orderId;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String comboName;
+    private String customComboName;
     private String note;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Boolean isCombo;
@@ -45,7 +45,7 @@ public class OrderDTO {
         OrderDTO orderDTO = new OrderDTO();
         orderDTO.setNote(order.getNote());
         orderDTO.setIsCombo(order.getIsCombo());
-        orderDTO.setComboName(order.getCustomComboName());
+        orderDTO.setCustomComboName(order.getCustomComboName());
         orderDTO.setOrderId(order.getId());
         orderDTO.setItems(order.getOrderItems().stream().map(OrderItemDTO::from).toList());
         orderDTO.setSeller(UserDTO.fromBasic(order.getSeller()));

@@ -31,28 +31,30 @@ public class CreateOrderRequest {
     public void validate() {
         Map<String, String> errors = new HashMap<>();
         if (items == null || items.isEmpty()) {
-            errors.put("items", "Order items cannot be empty.");
+            errors.put("items", "Đơn hàng không được trống.");
         }
         if (buyerPhone == null || buyerPhone.isEmpty()) {
-            errors.put("buyerPhone", "Buyer phone cannot be empty.");
+            errors.put("buyerPhone", "Số điện thoại không được để trống.");
         }
         if (buyerName == null || buyerName.isEmpty()) {
-            errors.put("buyerName", "Buyer name cannot be empty.");
+            errors.put("buyerName", "Tên người nhận không được để trống.");
         }
         if (addressUrl == null || addressUrl.isEmpty()) {
-            errors.put("addressUrl", "Address Url cannot be empty.");
+            errors.put("addressUrl", "Địa chỉ nhận hàng không được để trống.");
         }
         if (paymentMethod == null) {
-            errors.put("paymentMethod", "Payment method cannot be empty.");
-        }
-        if (!errors.isEmpty()) {
-            throw new BadRequestException("Bad request", Error.build("Invalid order request", errors));
+            errors.put("paymentMethod", "Phương thức thanh toán không được để trống.");
         }
         if (isCombo == null) {
             isCombo = false;
+            if (customComboName != null && !customComboName.isEmpty()) {
+                errors.put("customComboName", "Không được đặt tên combo nếu không phải là combo.");
+            }
+        } else if (customComboName == null || customComboName.isEmpty()) {
+            errors.put("customComboName", "Combo phải có tên.");
         }
-        if (customComboName == null || customComboName.isEmpty()) {
-            customComboName = null;
+        if (!errors.isEmpty()) {
+            throw new BadRequestException("Bad request", Error.build("Invalid order request", errors));
         }
         addressUrl = addressUrl.trim();
         note = note != null ? note.trim() : null;
