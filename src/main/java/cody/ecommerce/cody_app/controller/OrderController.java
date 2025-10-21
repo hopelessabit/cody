@@ -25,7 +25,7 @@ import java.math.BigDecimal;
 public class OrderController {
     private final OrderService orderService;
 
-    @PostMapping("/create")
+    @PostMapping("/orders/create")
     public ResponseEntity<ResponseData<OrderDTO>> createOrder(@RequestBody CreateOrderRequest request) {
         return ResponseUtil.getResponse(() -> orderService.create(request), "Order created successfully");
     }
