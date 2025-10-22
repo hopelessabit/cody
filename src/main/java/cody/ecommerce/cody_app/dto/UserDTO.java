@@ -26,6 +26,7 @@ public class UserDTO {
     private LocalDateTime createdAt;
     private String buyerPhone;
     private String addressUrl;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private EmployeeKpiDTO employeeKpi;
 
     public static UserDTO fromBasic(User user) {
@@ -60,9 +61,10 @@ public class UserDTO {
         dto.setCreatedAt(user.getCreatedAt());
 
         // Add EmployeeKpi data if user is an employee
-        if (user.getRole() == Role.EP && user.getEmployeeKpi() != null) {
+        if (user.getRole() == Role.EP && user.getEmployeeKpi() != null)
             dto.setEmployeeKpi(EmployeeKpiDTO.fromEntity(user.getEmployeeKpi()));
-        }
+        else
+            dto.setEmployeeKpi(EmployeeKpiDTO.zero(user));
 
         return dto;
     }

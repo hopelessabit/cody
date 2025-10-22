@@ -18,7 +18,7 @@ public interface KpiRepository extends JpaRepository<Kpi, String> {
     @Query("SELECT k FROM Kpi k WHERE k.assignToId = ?1")
     List<Kpi> findByAssignToId(String assignToId);
 
-    @Query("SELECT k FROM Kpi k WHERE k.createById = ?1")
+    @Query("SELECT k FROM Kpi k WHERE k.createdById = ?1")
     List<Kpi> findByCreateById(String createById);
 
     @Query("SELECT k FROM Kpi k WHERE k.status = ?1")

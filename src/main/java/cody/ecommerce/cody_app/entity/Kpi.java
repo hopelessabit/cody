@@ -30,12 +30,12 @@ public class Kpi extends BaseEntity {
     @Column(name = "create_date", updatable = false)
     private LocalDateTime createDate;
 
-    @Column(name = "create_by", length = 50)
-    private String createById;
+    @Column(name = "created_by_id", length = 50)
+    private String createdById;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "create_by", insertable = false, updatable = false)
-    private User createBy;
+    @JoinColumn(name = "created_by_id", insertable = false, updatable = false)
+    private User createdBy;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50)
@@ -64,12 +64,12 @@ public class Kpi extends BaseEntity {
         super();
     }
 
-    public Kpi(CreateKpiRequest request, User createBy) {
+    public Kpi(CreateKpiRequest request, User createdBy) {
         super();
         this.title = request.getTitle();
         this.description = request.getDescription();
         this.dueDate = request.getDueDate();
-        this.createById = createBy.getId();
+        this.createdById = createdBy.getId();
         this.assignToId = request.getAssignToId();
         this.inputTargetValue = request.getInputTargetValue() != null ? request.getInputTargetValue() : 0;
         this.inputCurrentProgress = request.getInputCurrentProgress() != null ? request.getInputCurrentProgress() : 0;

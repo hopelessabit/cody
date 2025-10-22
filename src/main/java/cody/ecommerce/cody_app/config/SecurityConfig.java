@@ -47,7 +47,7 @@ public class SecurityConfig {
     private final String BASE_URL_V1 = "/api/v1";
 
     private final String AUTHEN_URL = BASE_URL_V1 + "/auth/**";
-    private final String ACCOUNT_API = BASE_URL_V1 + "/account/**";
+    private final String ACCOUNT_API = BASE_URL_V1 + "/accounts/**";
     private final String PRODUCT_ADMIN_API = BASE_URL_V1 + "/products/admin/**";
     private final String PRODUCT_API = BASE_URL_V1 + "/products/**";
     private final String CATEGORY_ADMIN_API = BASE_URL_V1 + "/categories/admin/**";
@@ -55,6 +55,7 @@ public class SecurityConfig {
     private final String CHAT_API = BASE_URL_V1 + "/chatbot/**";
     private final String TEST_API = BASE_URL_V1 + "/test/**";
     private final String CLOUDINARY = BASE_URL_V1 + "/cloudinary/**";
+    private final String ADMIN_API = BASE_URL_V1 + "/admin/**";
     /**
      * Security filter chain security filter chain.
      *
@@ -71,7 +72,8 @@ public class SecurityConfig {
                         req -> req
                                 .requestMatchers(
                                         PRODUCT_ADMIN_API,
-                                        CATEGORY_ADMIN_API
+                                        CATEGORY_ADMIN_API,
+                                        ADMIN_API
                                 )
                                 .hasAnyAuthority("ADMIN", "MODERATOR")
                                 .requestMatchers(

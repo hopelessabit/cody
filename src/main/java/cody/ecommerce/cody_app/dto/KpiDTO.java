@@ -38,7 +38,7 @@ public class KpiDTO {
         dto.setDescription(kpi.getDescription());
         dto.setDueDate(kpi.getDueDate());
         dto.setCreateDate(kpi.getCreateDate());
-        dto.setCreateById(kpi.getCreateById());
+        dto.setCreateById(kpi.getCreatedById());
         dto.setStatus(kpi.getStatus());
         dto.setAssignToId(kpi.getAssignToId());
         dto.setInputTargetValue(kpi.getInputTargetValue());
@@ -47,8 +47,8 @@ public class KpiDTO {
         dto.setSelledCurrentProgress(kpi.getSelledCurrentProgress());
 
         // Map related entities if they exist
-        if (kpi.getCreateBy() != null) {
-            dto.setCreateBy(UserDTO.basicFrom(kpi.getCreateBy()));
+        if (kpi.getCreatedBy() != null) {
+            dto.setCreateBy(UserDTO.basicFrom(kpi.getCreatedBy()));
         }
         if (kpi.getAssignTo() != null) {
             dto.setAssignTo(UserDTO.basicFrom(kpi.getAssignTo()));
