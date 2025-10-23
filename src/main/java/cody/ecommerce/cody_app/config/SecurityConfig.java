@@ -85,7 +85,7 @@ public class SecurityConfig {
                                         CATEGORY_API,
                                         CHAT_API,
                                         CLOUDINARY,
-                                        CREATE_ORDER
+                                        CREATE_ORDER,
                                         "/v2/api-docs",
                                         "/api/v1/auth/**",
                                         "/v3/api-docs",
