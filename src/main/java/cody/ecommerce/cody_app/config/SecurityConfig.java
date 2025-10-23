@@ -56,7 +56,7 @@ public class SecurityConfig {
     private final String TEST_API = BASE_URL_V1 + "/test/**";
     private final String CLOUDINARY = BASE_URL_V1 + "/cloudinary/**";
     private final String ADMIN_API = BASE_URL_V1 + "/admin/**";
-    private final String CREATE_ORDER = BASE_URL_V1 + "/create";
+    private final String CREATE_ORDER = BASE_URL_V1 + "/orders/create";
     /**
      * Security filter chain security filter chain.
      *
