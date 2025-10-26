@@ -30,6 +30,7 @@ public class ProductDTO {
     private List<CategoryDTO> categories;
     private List<ProductImageDTO> images;
     private List<IngredientDTO> ingredients;
+    private String comboImageUrl;
 
     public static ProductDTO from(Product product) {
         ProductDTO productDTO = new ProductDTO();
@@ -43,6 +44,7 @@ public class ProductDTO {
         productDTO.setStockQuantity(product.getStockQuantity());
         productDTO.setIsHidden(product.getIsHidden());
         productDTO.setIsCombo(product.getIsCombo());
+        productDTO.setComboImageUrl(product.getComboImage());
         productDTO.setIngredients(
                 product.getProductIngredients().stream()
                         .map(ProductIngredient::getIngredient)
@@ -81,6 +83,7 @@ public class ProductDTO {
         productDTO.setName(product.getName());
         productDTO.setSlug(product.getSlug());
         productDTO.setIsCombo(product.getIsCombo());
+        productDTO.setComboImageUrl(product.getComboImage());
         productDTO.setIngredients(
                 product.getProductIngredients().stream()
                         .map(ProductIngredient::getIngredient)
@@ -97,6 +100,7 @@ public class ProductDTO {
         dto.setMetaDescription(product.getMetaDescription());
         dto.setSlug(product.getSlug());
         dto.setIsCombo(product.getIsCombo());
+        dto.setComboImageUrl(product.getComboImage());
         dto.setIngredients(
                 product.getProductIngredients().stream()
                         .map(ProductIngredient::getIngredient)
@@ -142,6 +146,7 @@ public class ProductDTO {
         dto.setStockQuantity(product.getStockQuantity());
         dto.setSlug(product.getSlug());
         dto.setIsCombo(product.getIsCombo());
+        dto.setComboImageUrl(product.getComboImage());
         dto.setIngredients(
                 product.getProductIngredients().stream()
                         .map(ProductIngredient::getIngredient)
@@ -173,6 +178,6 @@ public class ProductDTO {
             );
         }
         return dto;
-    } 
+    }
 
 }
