@@ -2,6 +2,7 @@ package cody.ecommerce.cody_app.dto;
 
 import cody.ecommerce.cody_app.entity.Product;
 import cody.ecommerce.cody_app.entity.sub_entity.ProductIncluded;
+import cody.ecommerce.cody_app.entity.sub_entity.ProductIngredient;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,6 +29,7 @@ public class ProductDTO {
     private Boolean isCombo;
     private List<CategoryDTO> categories;
     private List<ProductImageDTO> images;
+    private List<IngredientDTO> ingredients;
 
     public static ProductDTO from(Product product) {
         ProductDTO productDTO = new ProductDTO();
@@ -41,6 +43,13 @@ public class ProductDTO {
         productDTO.setStockQuantity(product.getStockQuantity());
         productDTO.setIsHidden(product.getIsHidden());
         productDTO.setIsCombo(product.getIsCombo());
+        productDTO.setIngredients(
+                product.getProductIngredients().stream()
+                        .map(ProductIngredient::getIngredient)
+                        .map(IngredientDTO::from)
+                        .toList()
+        );
+
         if (product.getIncludedProducts() != null) {
             productDTO.setProducts(
                     product.getIncludedProducts().stream()
@@ -72,6 +81,12 @@ public class ProductDTO {
         productDTO.setName(product.getName());
         productDTO.setSlug(product.getSlug());
         productDTO.setIsCombo(product.getIsCombo());
+        productDTO.setIngredients(
+                product.getProductIngredients().stream()
+                        .map(ProductIngredient::getIngredient)
+                        .map(IngredientDTO::from)
+                        .toList()
+        );
         return productDTO;
     }
 
@@ -82,6 +97,12 @@ public class ProductDTO {
         dto.setMetaDescription(product.getMetaDescription());
         dto.setSlug(product.getSlug());
         dto.setIsCombo(product.getIsCombo());
+        dto.setIngredients(
+                product.getProductIngredients().stream()
+                        .map(ProductIngredient::getIngredient)
+                        .map(IngredientDTO::from)
+                        .toList()
+        );
         if (product.getIncludedProducts() != null) {
             dto.setProducts(
                     product.getIncludedProducts().stream()
@@ -121,6 +142,12 @@ public class ProductDTO {
         dto.setStockQuantity(product.getStockQuantity());
         dto.setSlug(product.getSlug());
         dto.setIsCombo(product.getIsCombo());
+        dto.setIngredients(
+                product.getProductIngredients().stream()
+                        .map(ProductIngredient::getIngredient)
+                        .map(IngredientDTO::from)
+                        .toList()
+        );
         if (product.getIncludedProducts() != null) {
             dto.setProducts(
                     product.getIncludedProducts().stream()
