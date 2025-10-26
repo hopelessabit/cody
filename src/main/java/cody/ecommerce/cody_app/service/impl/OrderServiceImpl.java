@@ -121,14 +121,17 @@ public class OrderServiceImpl implements OrderService {
                             .orElseThrow(() -> new BadRequestException("Product not found"));
 
                     if (product.getStockQuantity() < item.getQuantity()) {
-                        errors.put("productId_" + product.getId(), "Not enough stock for product: " + product.getId());
+                        errors.put("productId_" + product.getId(), "Not enough stock for product: " + product.getName());
                     }
                     product.setStockQuantity(product.getStockQuantity() - item.getQuantity()); // Update stock
                     return OrderItem.from(order.getId(), product, item);
                 }).toList();
 
         if (!errors.isEmpty()) {
-            throw new BadRequestException("Bad request", Error.build("Not enough items", errors));
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("Not enough items for products: ");
+            errors.forEach((key, value) -> stringBuilder.append(value).append("; "));
+            throw new BadRequestException("Bad request", Error.build(stringBuilder.toString(), errors));
         }
 
         BigDecimal totalPrice = BigDecimal.ZERO;

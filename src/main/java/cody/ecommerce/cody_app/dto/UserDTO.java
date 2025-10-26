@@ -61,11 +61,13 @@ public class UserDTO {
         dto.setCreatedAt(user.getCreatedAt());
 
         // Add EmployeeKpi data if user is an employee
-        if (user.getRole() == Role.EP && user.getEmployeeKpi() != null)
+        if (!user.getRole().equals(Role.EP))
+            return dto;
+
+        if (user.getEmployeeKpi() != null)
             dto.setEmployeeKpi(EmployeeKpiDTO.fromEntity(user.getEmployeeKpi()));
         else
             dto.setEmployeeKpi(EmployeeKpiDTO.zero(user));
-
         return dto;
     }
 }

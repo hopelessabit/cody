@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Nationalized;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.math.BigDecimal;
@@ -51,6 +52,7 @@ public class Order extends BaseEntity {
     private String buyerPhone;
 
     @Column(name = "address_url", length = 500)
+    @Nationalized
     private String addressUrl;
 
     @Column(name = "decline_reason", length = 500)
