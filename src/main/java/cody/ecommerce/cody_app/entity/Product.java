@@ -62,6 +62,9 @@ public class Product extends BaseEntity{
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "weight", columnDefinition = "INT")
+    private Integer weight;
+
     // One-to-many: Product -> ProductImage
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     private List<ProductImage> images;
@@ -100,6 +103,7 @@ public class Product extends BaseEntity{
         this.setPrice(request.getPrice());
         this.setOriginalPrice(request.getOriginalPrice());
         this.setStockQuantity(request.getStockQuantity());
+        this.weight = request.getWeight();
         this.setIsHidden(request.getIsHidden() == null || request.getIsHidden());
     }
 }

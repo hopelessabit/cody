@@ -29,6 +29,7 @@ public class CreateProductRequest {
     private Set<CreateProductImageDTO> images;
     private List<ProductIngredientRequest> ingredients;
     private Boolean isHidden = false;
+    private Integer weight;
 
     public Error<String> validate() {
         Map<String, String> errors = new HashMap<>();
@@ -51,6 +52,10 @@ public class CreateProductRequest {
             errors.put("stockQuantity", "Stock quantity is required");
         } else if (stockQuantity < 0) {
             errors.put("stockQuantity", "Stock quantity must be zero or positive");
+        }
+
+        if (weight == null || weight <= 0) {
+            weight = 225;
         }
 
         imageHaveOneMain(errors);

@@ -19,6 +19,7 @@ public class UpdateProductRequest {
     private BigDecimal price;
     private BigDecimal originalPrice;
     private Integer stockQuantity;
+    private Integer weight;
     private Boolean isHidden; // Whether the product is hidden from public view
     private List<UpdateProductCategoryRequest> category; // IDs of categories to associate
     private List<UpdateProductImageRequest> image;   // URLs of images to update/add
@@ -42,6 +43,9 @@ public class UpdateProductRequest {
         }
         if (stockQuantity != null && stockQuantity < 0) {
             errors.put("stockQuantity", "Stock quantity must be zero or positive");
+        }
+        if (weight != null && weight <= 0) {
+            errors.put("weight", "Weight must be greater than zero");
         }
 
         if (errors.isEmpty()) {

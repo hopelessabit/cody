@@ -327,6 +327,7 @@ public class ProductServiceImpl implements ProductService {
         product.setOriginalPrice(CompareUtil.compare(request.getOriginalPrice(), product.getOriginalPrice()));
         product.setStockQuantity(CompareUtil.compare(request.getStockQuantity(), product.getStockQuantity()));
         product.setIsHidden(CompareUtil.compare(request.getIsHidden(), product.getIsHidden()));
+        product.setWeight(CompareUtil.compare(request.getWeight(), product.getWeight()));
 
         // Update categories and images if needed (requires additional logic)
         Product updated = productRepository.save(product);
