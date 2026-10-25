@@ -139,7 +139,7 @@ Cody App is architected following clean, layered architectural principles:
 ## 📁 Project Structure
 
 ```plaintext
-cody-main/
+cody/
 ├── .github/
 │   └── workflows/
 │       └── docker-image.yml         # CI/CD: build, push to Docker Hub, deploy over SSH
@@ -247,7 +247,7 @@ Initialize the Microsoft SQL Server database:
 1. **Clone the repository:**
    ```bash
    git clone <repository-url>
-   cd cody-main
+   cd cody
    ```
 
 2. **Verify environment setup:**
